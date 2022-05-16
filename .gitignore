@@ -21,7 +21,10 @@ node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
+target
+Cargo.lock
+mongo_data
+redis_data
 db
 
 .nyc_output
