@@ -8,7 +8,15 @@ use actix_web::web;
      logoutEndpoint: '/logout',
 */
 pub fn routes(cfg: &mut web::ServiceConfig) {
-    cfg.service(web::scope("/webauthn").service(
-        web::resource("/register").route(web::post().to(handlers::register_challenge_request)),
-    ));
+    cfg.service(
+        web::scope("/webauthn")
+            .service(
+                web::resource("/register")
+                    .route(web::post().to(handlers::register_challenge_request)),
+            )
+            .service(
+                web::resource("/response")
+                    .route(web::post().to(handlers::register_challenge_response)),
+            ),
+    );
 }

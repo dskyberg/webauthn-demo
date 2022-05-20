@@ -39,7 +39,8 @@ class Webauthn {
       enableLogging: true,
       attestation: Dictionaries.AttestationConveyancePreference.NONE,
       //authenticator: Dictionaries.AuthenticatorAttachment.CROSS_PLATFORM,
-      //userVerification: Dictionaries.UserVerificationRequirement.DISCOURAGED,
+      userVerification: Dictionaries.UserVerificationRequirement.DISCOURAGED,
+      checkCounter: false,
     }, options)
 
     const attestationOptions = Object.values(Dictionaries.AttestationConveyancePreference)
@@ -257,6 +258,7 @@ class Webauthn {
 
       try {
         if (response.attestationObject !== undefined) {
+          // Process a registration response
           result = this.verifyAuthenticatorAttestationResponse(response);
 
           if (result.verified) {
@@ -265,13 +267,12 @@ class Webauthn {
           }
 
         } else if (response.authenticatorData !== undefined) {
+          // Process an assertion (login) response
           result = Webauthn.verifyAuthenticatorAssertionResponse(response, user.authenticator, this.config.enableLogging)
 
           if (result.verified) {
-            if (result.counter <= user.authenticator.counter)
-              console.log('Authr counter did not increase!')
-            //throw new Error('Authr counter did not increase!')
-
+            if (this.config.checkCounter && result.counter <= user.authenticator.counter)
+              throw new Error('Authr counter did not increase!')
             user.authenticator.counter = result.counter
             await this.store.put(username, user)
           }
@@ -490,6 +491,7 @@ class Webauthn {
     return response
   }
 
+
   static verifyAuthenticatorAssertionResponse(webauthnResponse, authr, enableLogging = false) {
     const authenticatorData = base64url.toBuffer(webauthnResponse.authenticatorData)
 
@@ -507,6 +509,13 @@ class Webauthn {
 
       const publicKey = Webauthn.ASN1toPEM(base64url.toBuffer(authr.publicKey))
       const signature = base64url.toBuffer(webauthnResponse.signature)
+
+      let flags = authrDataStruct.flags
+      console.log("Flags - User Present:", flags & 0b1)
+      console.log("Flags - User Berified:", flags & 0b100)
+      console.log("Flags - Attested Credential data included:", flags & 0b100000)
+      console.log("Flags - Extension data included:", flags & 0b1000000)
+
 
       response.counter = authrDataStruct.counter
       response.verified = Webauthn.verifySignature(signature, signatureBase, publicKey)

@@ -55,8 +55,9 @@ const webauthn = new Webauthn({
     // },
     rpName: 'Swankymutt, Inc.',
     attestation: 'direct',
-    authenticator: 'cross-platform',
-    userVerification: 'discouraged',
+    authenticator: 'platform',
+    //userVerification: 'discouraged',
+    checkCounter: false,
 })
 
 // Mount webauthn endpoints

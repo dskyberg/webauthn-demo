@@ -7,8 +7,10 @@ use actix_web::{
     Either, HttpResponse, Responder, Result,
 };
 
-pub use data_services::DataServices;
-pub mod data_services;
+pub use services::DataServices;
+pub mod config;
+pub mod errors;
+pub mod services;
 pub mod utils;
 pub mod webauthn;
 

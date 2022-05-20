@@ -1,18 +1,18 @@
-import { action, observable, makeObservable } from "mobx"
+import { action, observable, makeAutoObservable, toJS } from "mobx"
 
 export default class JournalStore {
 
     journal = []
 
     constructor() {
-        makeObservable(this, {
-            journal: observable,
-            log: action,
-        })
+        makeAutoObservable(this)
     }
 
     log(group, message) {
         this.journal.push({ group, message })
     }
 
+    journal2JS() {
+        return toJS(this.journal)
+    }
 }

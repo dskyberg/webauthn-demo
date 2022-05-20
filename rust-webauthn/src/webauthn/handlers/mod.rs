@@ -1,0 +1,4 @@
+pub use register_challenge_request::register_challenge_request;
+pub use register_challenge_response::register_challenge_response;
+pub mod register_challenge_request;
+pub mod register_challenge_response;

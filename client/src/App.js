@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useStore } from './store';
-
+import { observer } from 'mobx-react-lite'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
 import TopAppBar from './components/TopAppBar'
@@ -10,7 +10,7 @@ import User from './components/User'
 import Settings from './components/Settings'
 import Home from './components/Home'
 
-export default function App() {
+const App = observer(() => {
   const { settings } = useStore()
   const [user, setUser] = useState(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -34,14 +34,6 @@ export default function App() {
     setSettingsOpen(true)
   }
 
-  /*
-          <Box sx={{ my: 4 }}>
-          {isLoggedIn ? <User onLogout={logout} user={user} />
-            : <Login onLogin={login} />
-          }
-
-        </Box>
-*/
   return (
     <main>
       <TopAppBar onSettingsOpen={handleSettingsOpen} />
@@ -53,4 +45,5 @@ export default function App() {
       <Settings open={settingsOpen} onClose={handleSettingsClose} />
     </main >
   );
-}
+})
+export default App
