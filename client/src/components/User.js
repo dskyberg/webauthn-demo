@@ -33,7 +33,7 @@ export default function User(props) {
 
   return (
     <Container maxWidth="sm">
-      <Typography variant="h6">Welcome {props.user.username}</Typography>
+      <Typography variant="h6">Welcome {props.user.name}</Typography>
       <Typography variant="h6">Your authenticators:</Typography>
       <Button variant="primary" onClick={logout}>Log Out</Button>
       {

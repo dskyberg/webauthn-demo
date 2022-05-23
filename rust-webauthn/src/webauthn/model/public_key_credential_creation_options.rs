@@ -11,7 +11,7 @@ pub struct PublicKeyCredentialCreationOptions {
     pub user: UserEntity,
     #[serde(with = "serde_stuff::base64")]
     pub challenge: Vec<u8>,
-    pub pub_key_cred_params: PublicKeyCredentialParameters,
+    pub pub_key_cred_params: Vec<PublicKeyCredentialParameters>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timeout: Option<usize>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -30,7 +30,7 @@ impl PublicKeyCredentialCreationOptions {
             rp: RpEntity::default(),
             user: UserEntity::default(),
             challenge: make_id(32).unwrap(),
-            pub_key_cred_params: PublicKeyCredentialParameters::default(),
+            pub_key_cred_params: vec![PublicKeyCredentialParameters::default()],
             timeout: None,
             attestation: Some(AttestationConveyancePreference::default()),
             authenticator_selection: Some(AuthenticatorSelectionCriteria::default()),
@@ -75,7 +75,7 @@ pub struct PublicKeyCredentialCreationOptionsBuilder {
     user: Option<UserEntity>,
     challenge: Option<Vec<u8>>,
     timeout: Option<usize>,
-    pub_key_cred_params: Option<PublicKeyCredentialParameters>,
+    pub_key_cred_params: Option<Vec<PublicKeyCredentialParameters>>,
     attestation: Option<AttestationConveyancePreference>,
     authenticator_selection: Option<AuthenticatorSelectionCriteria>,
 }
@@ -123,7 +123,7 @@ impl PublicKeyCredentialCreationOptionsBuilder {
     }
 
     pub fn with_pub_key_cred_params(&mut self, params: PublicKeyCredentialParameters) -> &mut Self {
-        self.pub_key_cred_params = Some(params);
+        self.pub_key_cred_params = Some(vec![params]);
         self
     }
 

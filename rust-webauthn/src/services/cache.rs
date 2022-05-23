@@ -62,6 +62,7 @@ impl Cache {
                 conn += &format!("password={}", database.unwrap());
             }
         }
+        log::info!("Redis connection string: {}", &conn);
         conn
     }
 }

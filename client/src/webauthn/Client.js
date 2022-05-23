@@ -9,7 +9,7 @@
  * @ignore
  */
 import base64url from './base64url'
-//import base64url from 'base64url'
+
 /**
  * Client
  * @ignore
@@ -58,13 +58,13 @@ class Client {
 
         return pubKeyCred
     }
-    /*
-        static generateRandomBuffer(len) {
-            const buf = new Uint8Array(len || 32)
-            window.crypto.getRandomValues(buf)
-            return buf
-        }
-    */
+
+    static generateRandomBuffer(len) {
+        const buf = new Uint8Array(len || 32)
+        window.crypto.getRandomValues(buf)
+        return buf
+    }
+
     static preformatMakeCredReq(makeCredReq) {
         makeCredReq.challenge = base64url.decode(makeCredReq.challenge)
         makeCredReq.user.id = base64url.decode(makeCredReq.user.id)
@@ -81,14 +81,7 @@ class Client {
         return getAssert
     }
 
-    /**
-     * Send a request for a WebAuthn Credential Registration Challenge
-     * The Verifier will return a publicKeyCredentialCreationOptions object
-     * 
-     * @param {*} formBody 
-     * @returns 
-     */
-    async credentialRegistrationChallenge(formBody) {
+    async getMakeCredentialsChallenge(formBody) {
         const response = await fetch(`${this.pathPrefix}${this.credentialEndpoint}`, {
             method: 'POST',
             credentials: 'include',
@@ -111,12 +104,7 @@ class Client {
         return await response.json()
     }
 
-    // Send a response to either a Credential (Registration) challenge or an
-    // Assertion (authentication) challenge.  The server is responsible for 
-    // tracking state to determine what challenge this is in response to.  For
-    // our server, the challenge nonce is stored in the session, and matched against
-    // the challenge send in the response. 
-    async credentialResponse(body) {
+    async sendWebAuthnResponse(body) {
         const response = await fetch(`${this.pathPrefix}${this.challengeEndpoint}`, {
             method: 'POST',
             credentials: 'include',
@@ -133,9 +121,7 @@ class Client {
         return await response.json()
     }
 
-    // Login Step 1: Send an assertion and receive  an Assertion Challenge
-    async fetchAssertionChallenge(formBody) {
-
+    async getGetAssertionChallenge(formBody) {
         const response = await fetch(`${this.pathPrefix}${this.assertionEndpoint}`, {
             method: 'POST',
             credentials: 'include',
@@ -152,45 +138,36 @@ class Client {
         return await response.json()
     }
 
-    async register(data = {}, journal) {
-        // Credential Registration Challenge
-        console.log('Registration Challenge >==>', data)
-        const challenge = await this.credentialRegistrationChallenge(data)
-        console.log('Registration Challenge <==<', challenge)
+    async register(data = {}) {
+        const challenge = await this.getMakeCredentialsChallenge(data)
+        console.log('REGISTER CHALLENGE', challenge)
 
-        const credentialCreationOptions = Client.preformatMakeCredReq(challenge)
-        console.log('Verifier Public Key: ', credentialCreationOptions)
+        const publicKey = Client.preformatMakeCredReq(challenge)
+        console.log('REGISTER PUBLIC KEY', publicKey)
 
-        const credential = await navigator.credentials.create({ credentialCreationOptions })
-        console.log('Authenticator Credential: ', credential)
+        const credential = await navigator.credentials.create({ publicKey })
+        console.log('REGISTER CREDENTIAL', credential)
 
         const credentialResponse = Client.publicKeyCredentialToJSON(credential)
-        console.log('Registration Response >==>', credentialResponse)
+        console.log('REGISTER RESPONSE', credentialResponse)
 
-        // Credential Registration Response
-        const response = await this.credentialResponse(credentialResponse)
-        console.log('Registration Response <==<', response)
-        return response
-
+        return await this.sendWebAuthnResponse(credentialResponse)
     }
 
     async login(data = {}) {
-        console.log('Assertion Challenge >==>', data);
-        const assertionChallenge = await this.fetchAssertionChallenge(data)
-        console.log('Assertion Challenge <==<', assertionChallenge)
+        const challenge = await this.getGetAssertionChallenge(data)
+        console.log('LOGIN CHALLENGE', challenge)
 
-        const credentialRequestOptions = Client.preformatGetAssertReq(assertionChallenge)
-        console.log('Verifier Public Key:', credentialRequestOptions)
+        const publicKey = Client.preformatGetAssertReq(challenge)
+        console.log('LOGIN PUBLIC KEY', publicKey)
 
-        const assertion = await navigator.credentials.get({ credentialRequestOptions })
-        console.log('Authenticator Assertion: ', assertion)
+        const credential = await navigator.credentials.get({ publicKey })
+        console.log('LOGIN CREDENTIAL', credential)
 
-        const assertionResponse = Client.publicKeyCredentialToJSON(assertion)
-        console.log('Assertion Response >==>', assertionResponse)
+        const credentialResponse = Client.publicKeyCredentialToJSON(credential)
+        console.log('LOGIN RESPONSE', credentialResponse)
 
-        const response = await this.credentialResponse(assertionResponse)
-        console.log('Assertion Response <==<', response)
-        return response
+        return await this.sendWebAuthnResponse(credentialResponse)
     }
 
     async logout() {

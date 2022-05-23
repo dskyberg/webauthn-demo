@@ -26,13 +26,15 @@ pub enum Error {
     Base64Error(base64::DecodeError),
     #[error("General error")]
     GeneralError,
+    #[error("{0}")]
+    SessionError(String),
     #[error("Internal Service Error: {0}")]
     InternalServiceError(String),
 }
 
 use actix_web::{http::StatusCode, HttpResponse};
 
-impl actix_web::error::ResponseError for Error {
+impl actix_web::ResponseError for Error {
     fn error_response(&self) -> HttpResponse {
         HttpResponse::build(self.status_code()).json("WebAuthn Error")
     }

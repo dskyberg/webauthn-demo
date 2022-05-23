@@ -16,47 +16,50 @@ import Alert from '@mui/material/Alert'
 export default function Login(props) {
     const { journal } = useStore()
     const [name, setName] = useState('')
-    const [username, setUsername] = useState('')
+    const [displayName, setDisplayName] = useState('')
     const [webauthn] = useState(new Client())
     const [alert, setAlert] = useState({ open: false, severity: 'info', message: '' })
 
     const setError = (message) => {
+        console.error(message)
         setAlert({ open: true, severity: "error", message })
     }
 
     const setWarning = (message) => {
+        console.warn(message)
         setAlert({ open: true, severity: "warning", message })
     }
 
     const setSuccess = (message) => {
+        console.log(message)
         setAlert({ open: true, severity: "success", message })
     }
 
     const onRegister = () => {
-        if (username === "") {
-            setWarning('Please enter a username')
+        if (displayName === "") {
+            setWarning('Please enter a display name')
             return
         }
         if (name === "") {
-            setWarning('Please enter a name')
+            setWarning('Please enter a username')
             return
         }
 
-        webauthn.register({ name, username }, journal).then(response => {
+        webauthn.register({ name, displayName }, journal).then(response => {
             setSuccess('Registration successful. Try logging in.')
         }).catch(error => setError(error.message))
     }
 
     const onLogin = () => {
-        if (username === "") {
+        if (displayName === "") {
             setWarning('Please enter a username')
             return
         }
-        webauthn.login({ username }).then(response => {
+        webauthn.login({ name }).then(response => {
             console.log('Login response: ', response);
             if (response && response.status === "ok")
                 props.onLogin({
-                    username,
+                    name,
                 });
         }).catch(error => setError(error.message))
     }
@@ -95,19 +98,19 @@ export default function Login(props) {
                             css={styles.textbox_css}
                             required
                             id="outlined-required"
-                            label="User"
+                            label="Username"
                             size="small"
-                            value={username}
-                            onChange={e => setUsername(e.target.value)}
+                            value={name}
+                            onChange={e => setName(e.target.value)}
                         />
                         <TextField
                             css={styles.textbox_css}
                             required
                             id="outlined-required"
-                            label="Name"
+                            label="Display Name"
                             size="small"
-                            value={name}
-                            onChange={e => setName(e.target.value)}
+                            value={displayName}
+                            onChange={e => setDisplayName(e.target.value)}
                         />
                         <Button css={styles.button_css} variant="contained" onClick={onRegister}>
                             Register
@@ -123,8 +126,8 @@ export default function Login(props) {
                             id="outlined-required"
                             label="Username"
                             size="small"
-                            value={username}
-                            onChange={e => setUsername(e.target.value)}
+                            value={name}
+                            onChange={e => setName(e.target.value)}
                         />
 
                         <Button css={styles.button_css} variant="contained" onClick={onLogin}>

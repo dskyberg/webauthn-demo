@@ -8,8 +8,12 @@ use super::*;
 pub struct AuthenticatorSelectionCriteria {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub authenticator_attachment: Option<AuthenticatorAttachment>,
+    /// If no value is given then the effective value is required
+    /// if requireResidentKey is true or discouraged if it is
+    /// false or absent.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resident_key: Option<ResidentKeyRequirement>,
+    /// true if, and only if, residentKey is set to required
     #[serde(skip_serializing_if = "Option::is_none")]
     pub require_resident_key: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -76,6 +80,8 @@ impl AuthenticatorSelectionCriteriaBuilder {
         self
     }
 
+    /// Note: if require_resident_key is Some(true) then
+    /// resident_key must either be None or
     pub fn build(&self) -> Result<AuthenticatorSelectionCriteria> {
         Ok(AuthenticatorSelectionCriteria {
             authenticator_attachment: self.authenticator_attachment.clone(),

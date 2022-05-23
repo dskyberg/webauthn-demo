@@ -26,12 +26,30 @@ impl DataServices {
     }
 
     pub async fn get_user(&self, user_name: &str) -> Result<Option<UserEntity>> {
+        log::info!("get_user - getting: {}", user_name);
         let cache_key = format!("{}:{}", "users", user_name);
-        let mut con = self.cache.client.get_async_connection().await?;
-        let cache_response = con.get(&cache_key).await?;
+        let mut con = self
+            .cache
+            .client
+            .get_async_connection()
+            .await
+            .map_err(|x| {
+                log::info!("Redist connection failed: {:?}", &x);
+                x
+            })?;
+        let cache_response = con.get(&cache_key).await.map_err(|x| {
+            log::info!("Redis get failed: {:?}", &x);
+            x
+        })?;
         match cache_response {
-            Value::Nil => Ok(None),
-            Value::Data(val) => Ok(serde_json::from_slice(&val)?),
+            Value::Nil => {
+                log::info!("get_user: not found");
+                Ok(None)
+            }
+            Value::Data(val) => {
+                log::info!("get_user: found {:?}", &val);
+                Ok(serde_json::from_slice(&val)?)
+            }
             _ => Err(Error::GeneralError.into()),
         }
     }

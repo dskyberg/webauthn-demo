@@ -10,6 +10,6 @@ pub enum AuthenticatorAttachment {
 
 impl Default for AuthenticatorAttachment {
     fn default() -> AuthenticatorAttachment {
-        Self::CrossPlatform
+        Self::Platform
     }
 }

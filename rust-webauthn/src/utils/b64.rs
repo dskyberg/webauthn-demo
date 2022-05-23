@@ -5,9 +5,9 @@ use anyhow::{anyhow, Result};
 use base64;
 
 pub fn to_b64(value: &[u8]) -> String {
-    base64::encode_config(value, base64::URL_SAFE)
+    base64::encode_config(value, base64::URL_SAFE_NO_PAD)
 }
 
-pub fn from_b64(value: &[u8]) -> Result<Vec<u8>> {
-    base64::decode_config(value, base64::URL_SAFE).map_err(|x| anyhow!(x))
+pub fn from_b64(value: &str) -> Result<Vec<u8>> {
+    base64::decode_config(value, base64::URL_SAFE_NO_PAD).map_err(|x| anyhow!(x))
 }

@@ -1,7 +1,10 @@
 pub use attestatin_conveyence_preference::*;
 pub use authenticator_attachment::*;
+pub use authenticator_attestation_response::*;
 pub use authenticator_selection_criteria::*;
+pub use client_data::*;
 pub use cose_algorithm::*;
+pub use public_key_credential::*;
 pub use public_key_credential_creation_options::*;
 pub use public_key_credential_parameters::*;
 pub use public_key_credential_type::*;
@@ -12,8 +15,11 @@ pub use user_verification_requirement::*;
 
 pub mod attestatin_conveyence_preference;
 pub mod authenticator_attachment;
+pub mod authenticator_attestation_response;
 pub mod authenticator_selection_criteria;
+pub mod client_data;
 pub mod cose_algorithm;
+pub mod public_key_credential;
 pub mod public_key_credential_creation_options;
 pub mod public_key_credential_parameters;
 pub mod public_key_credential_type;

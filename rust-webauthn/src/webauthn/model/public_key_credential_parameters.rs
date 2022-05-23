@@ -18,7 +18,7 @@ impl PublicKeyCredentialParameters {
     pub fn new() -> Self {
         Self {
             key_type: PublicKeyCredentialType::PublicKey,
-            alg: COSEAlgorithm::ECDH_SS__HKDF_256,
+            alg: COSEAlgorithm::ES256,
         }
     }
 }

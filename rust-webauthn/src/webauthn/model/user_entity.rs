@@ -9,8 +9,8 @@ use crate::utils::make_id;
 pub struct UserEntity {
     #[serde(default, with = "serde_stuff::option_base64")]
     pub id: Option<Vec<u8>>,
-    pub display_name: String,
     pub name: String,
+    pub display_name: String,
 }
 
 impl UserEntity {
@@ -21,8 +21,8 @@ impl UserEntity {
     pub fn new(name: &str, display_name: &str) -> UserEntity {
         UserEntity {
             id: None,
-            display_name: display_name.to_owned(),
             name: name.to_owned(),
+            display_name: display_name.to_owned(),
         }
     }
 }

@@ -64,6 +64,7 @@ const webauthn = new WebAuthn({
     username: 'username',
     name: 'displayName',
   },
+  
   store: new LevelAdapter(),
   // OR
   // store: {
