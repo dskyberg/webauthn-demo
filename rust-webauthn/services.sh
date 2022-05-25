@@ -27,8 +27,8 @@ function up() {
 }
 
 function down() {
-    podman stop mongo
-    podman stop redis
+    podman stop mongo > /dev/null 2>&1
+    podman stop redis > /dev/null 2>&1
 }
 
 function reset() {
@@ -37,6 +37,9 @@ function reset() {
 }
 
 function clean() {
+    podman rm mongo > /dev/null 2>&1
+    podman rm redis > /dev/null 2>&1
+
     if [ -d "$MONGO_DATA" ]; then
         echo "Deleting $MONGO_DATA"
         rm -Rf $1

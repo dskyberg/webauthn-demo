@@ -1,3 +1,4 @@
+use crate::cbor::errors::CoseError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -14,6 +15,8 @@ pub enum Error {
     BuildError(String),
     #[error("UserEntityBuild error")]
     UserEntityBuildError,
+    #[error("Error deserializing AuthenticatorData: {0}")]
+    AuthenticatorDataDeserialize(String),
     #[error("AuthenticatorSelectionCriteriaBuilder error")]
     AuthenticatorSelectionCriteriaBuildError,
     #[error("RegistrationChallengResponseBuilder error")]
@@ -30,6 +33,8 @@ pub enum Error {
     SessionError(String),
     #[error("Internal Service Error: {0}")]
     InternalServiceError(String),
+    #[error("{0}")]
+    CoseKeyError(CoseError),
 }
 
 use actix_web::{http::StatusCode, HttpResponse};

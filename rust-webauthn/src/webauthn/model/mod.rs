@@ -1,6 +1,10 @@
 pub use attestatin_conveyence_preference::*;
+pub use attestation::*;
+pub use attestation_format_identifier::*;
+pub use attestation_statement::*;
 pub use authenticator_attachment::*;
 pub use authenticator_attestation_response::*;
+pub use authenticator_data::*;
 pub use authenticator_selection_criteria::*;
 pub use client_data::*;
 pub use cose_algorithm::*;
@@ -14,8 +18,12 @@ pub use user_entity::*;
 pub use user_verification_requirement::*;
 
 pub mod attestatin_conveyence_preference;
+pub mod attestation;
+pub mod attestation_format_identifier;
+pub mod attestation_statement;
 pub mod authenticator_attachment;
 pub mod authenticator_attestation_response;
+pub mod authenticator_data;
 pub mod authenticator_selection_criteria;
 pub mod client_data;
 pub mod cose_algorithm;

@@ -8,6 +8,7 @@ use actix_web::{
 };
 
 pub use services::DataServices;
+pub mod cbor;
 pub mod config;
 pub mod errors;
 pub mod services;

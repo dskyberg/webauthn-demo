@@ -63,10 +63,15 @@ pub async fn register_challenge_response(
 /// Process an attestation response
 pub fn process_attestation_response(
     challenge: &[u8],
-    name: &str,
+    _name: &str,
     response: &AuthenticatorAttestationResponse,
 ) -> Result<HttpResponse, Error> {
+    let auth_data = response.attestation_object.as_ref().unwrap();
+    log::info!("Auth data: {:?}", auth_data);
+
     let attestation = response.attestation_object.as_ref().unwrap();
+    log::info!("Attestation Object: {:?}", attestation);
+
     let client_data: ClientData = serde_json::from_slice(&response.client_data_json.to_owned())
         .map_err(|_| Error::GeneralError)?;
 

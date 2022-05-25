@@ -1,30 +1,44 @@
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde_cbor::Value;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-pub enum AttestationFormatIdentifier {
-    #[serde(rename = "packed")]
-    Packed,
-    #[serde(rename = "tpm")]
-    Tpm,
-    #[serde(rename = "android-key")]
-    AndroidKey,
-    #[serde(rename = "android-safetynet")]
-    AndroidSafetyNet,
-    #[serde(rename = "fido-u2f")]
-    FidoU2F,
-    #[serde(rename = "apple")]
-    AppleAnonymous,
-    #[serde(rename = "none")]
-    None,
-}
+use super::{AttestationFormatIdentifier, AttestationStatement};
 
-pub struct AttestationStatement {
-    pub alg: String,
-    pub sig: String,
-    pub x5c: String,
-}
-
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Attestation {
-    fmt: AttestationFormatIdentifier,
-    att_stmt: AttestationStatement,
+    pub fmt: AttestationFormatIdentifier,
+    pub att_stmt: AttestationStatement,
+    pub auth_data: Value,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_cbor;
+
+    #[test]
+    fn test_it() {
+        let cbor = vec![
+            163, 99, 102, 109, 116, 102, 112, 97, 99, 107, 101, 100, 103, 97, 116, 116, 83, 116,
+            109, 116, 162, 99, 97, 108, 103, 38, 99, 115, 105, 103, 88, 72, 48, 70, 2, 33, 0, 186,
+            255, 250, 233, 204, 53, 205, 105, 152, 34, 254, 243, 142, 53, 25, 119, 203, 146, 117,
+            114, 108, 22, 116, 41, 222, 190, 216, 135, 155, 174, 164, 202, 2, 33, 0, 207, 208, 26,
+            231, 177, 35, 14, 71, 135, 185, 88, 11, 55, 158, 119, 60, 78, 57, 117, 147, 195, 205,
+            81, 95, 173, 165, 225, 237, 210, 82, 191, 140, 104, 97, 117, 116, 104, 68, 97, 116, 97,
+            88, 205, 73, 150, 13, 229, 136, 14, 140, 104, 116, 52, 23, 15, 100, 118, 96, 91, 143,
+            228, 174, 185, 162, 134, 50, 199, 153, 92, 243, 186, 131, 29, 151, 99, 69, 0, 0, 0, 0,
+            173, 206, 0, 2, 53, 188, 198, 10, 100, 139, 11, 37, 241, 240, 85, 3, 0, 73, 95, 191,
+            221, 204, 49, 132, 11, 135, 215, 52, 83, 99, 249, 106, 57, 239, 170, 41, 22, 128, 232,
+            129, 36, 26, 37, 64, 217, 109, 81, 160, 84, 124, 103, 116, 230, 98, 67, 171, 79, 91,
+            58, 47, 116, 82, 86, 198, 236, 187, 130, 204, 190, 54, 169, 117, 28, 139, 8, 78, 246,
+            197, 6, 62, 242, 175, 3, 43, 138, 241, 179, 25, 96, 252, 93, 165, 1, 2, 3, 38, 32, 1,
+            33, 88, 32, 12, 25, 245, 38, 7, 19, 192, 244, 246, 95, 19, 86, 171, 15, 70, 178, 5, 56,
+            155, 189, 151, 83, 87, 71, 72, 39, 164, 2, 6, 246, 128, 204, 34, 88, 32, 158, 185, 45,
+            166, 111, 16, 243, 155, 197, 31, 170, 192, 215, 0, 124, 161, 228, 58, 96, 182, 166, 82,
+            58, 193, 120, 185, 239, 186, 189, 37, 23, 106,
+        ];
+
+        let attestation: Attestation = serde_cbor::from_slice(&cbor).expect("Not yet");
+        dbg!(&attestation);
+    }
 }
