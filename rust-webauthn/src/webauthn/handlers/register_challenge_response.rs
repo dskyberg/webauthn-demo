@@ -9,7 +9,8 @@ use crate::{
     errors::Error,
     utils::from_b64,
     webauthn::model::{
-        AuthenticatorAttestationResponse, ClientData, PublicKeyCredential, PublicKeyCredentialType,
+        Attestation, AuthenticatorAttestationResponse, AuthenticatorData, ClientData,
+        PublicKeyCredential, PublicKeyCredentialType,
     },
     DataServices,
 };
@@ -60,20 +61,26 @@ pub async fn register_challenge_response(
     Ok(HttpResponse::Ok().json(r#"{"status": "ok"}"#))
 }
 
+use openssl::sha::sha256;
+
 /// Process an attestation response
 pub fn process_attestation_response(
     challenge: &[u8],
     _name: &str,
     response: &AuthenticatorAttestationResponse,
 ) -> Result<HttpResponse, Error> {
-    let auth_data = response.attestation_object.as_ref().unwrap();
-    log::info!("Auth data: {:?}", auth_data);
+    let auth_data_vec = response.authenticator_data.as_ref().ok_or_else(|| {
+        Error::AttestationObjectError("No authData present in Attestation Obiect".to_string())
+    })?;
+    let _auth_data = AuthenticatorData::deserialize(auth_data_vec)?;
 
-    let attestation = response.attestation_object.as_ref().unwrap();
-    log::info!("Attestation Object: {:?}", attestation);
+    let attestation_vec = response.attestation_object.as_ref().ok_or_else(|| {
+        Error::AttestationObjectError("No attStmt present in Attestation Obiect".to_string())
+    })?;
+    let _attestation = Attestation::deserialize(attestation_vec)?;
 
     let client_data: ClientData = serde_json::from_slice(&response.client_data_json.to_owned())
-        .map_err(|_| Error::GeneralError)?;
+        .map_err(Error::ClientDataParseError)?;
 
     // Compare the challenges
     if client_data.challenge != challenge {
@@ -84,6 +91,16 @@ pub fn process_attestation_response(
     if client_data.origin != "http://localhost:3000" {
         return Ok(HttpResponse::Unauthorized().json(r#"{ "message": "bad origin" }"#));
     }
+
+    //------------- Verify the signature --------------
+    // Construct the signature base by concatenating the auth_data and
+    let client_data_json = crate::utils::to_b64(&response.client_data_json);
+
+    // Perform a sha256 hash of the client data
+    let hash = sha256(client_data_json.as_bytes());
+    let mut _signature_base = auth_data_vec.to_owned().extend(&hash.to_vec());
+
+    // Make the cert from the
 
     Ok(HttpResponse::Ok().json(r#"{"status": "ok"}"#))
 }

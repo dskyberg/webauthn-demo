@@ -1,4 +1,3 @@
-use anyhow::Result;
 use std::io::Cursor;
 use std::io::Read;
 
@@ -31,7 +30,7 @@ pub const ATTESTED_CREDENTIAL_DATA_INCLUDED: u8 = 64;
 pub const EXTENSION_DATA_INCLUDED: u8 = 128;
 
 impl AuthenticatorData {
-    pub fn deserialize(data: &[u8]) -> Result<Self> {
+    pub fn deserialize(data: &[u8]) -> Result<Self, Error> {
         let front_matter_len = 55;
         let data_len: usize = data.len();
         let mut file = Cursor::new(data);

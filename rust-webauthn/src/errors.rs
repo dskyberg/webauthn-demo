@@ -21,6 +21,14 @@ pub enum Error {
     AuthenticatorSelectionCriteriaBuildError,
     #[error("RegistrationChallengResponseBuilder error")]
     RegistrationChallengResponseBuildError,
+    #[error("{0}")]
+    CoseKeyError(CoseError),
+    #[error("Error parsing Attestation: {0}")]
+    AttestationParseError(serde_cbor::error::Error),
+    #[error("Attestation Object error: {0}")]
+    AttestationObjectError(String),
+    #[error("Client data failed to deserialize: {0}")]
+    ClientDataParseError(serde_json::Error),
     #[error("No id or name.  Must have at least one of them")]
     MissingIdAndName,
     #[error("RpEntityBuild error")]
@@ -33,8 +41,6 @@ pub enum Error {
     SessionError(String),
     #[error("Internal Service Error: {0}")]
     InternalServiceError(String),
-    #[error("{0}")]
-    CoseKeyError(CoseError),
 }
 
 use actix_web::{http::StatusCode, HttpResponse};

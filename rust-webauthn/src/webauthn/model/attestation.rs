@@ -1,3 +1,4 @@
+use crate::errors::Error;
 use serde::Deserialize;
 use serde_cbor::Value;
 
@@ -9,6 +10,12 @@ pub struct Attestation {
     pub fmt: AttestationFormatIdentifier,
     pub att_stmt: AttestationStatement,
     pub auth_data: Value,
+}
+
+impl Attestation {
+    pub fn deserialize(cbor: &[u8]) -> Result<Attestation, Error> {
+        serde_cbor::from_slice(cbor).map_err(Error::AttestationParseError)
+    }
 }
 
 #[cfg(test)]
