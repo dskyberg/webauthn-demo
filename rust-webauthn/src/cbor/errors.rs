@@ -3,6 +3,7 @@
 //! [cbor-codec](https://twittner.gitlab.io/cbor-codec/cbor/) errors.
 use cbor::decoder::DecodeError;
 use cbor::encoder::EncodeError;
+use openssl::error;
 use std::io;
 
 /// Errors that don't return anything.
@@ -42,6 +43,8 @@ pub enum CoseError {
     InvalidTag(),
     AlgorithmOnlySupportsOneRecipient(String),
     MissingAlgorithm(),
+    CryptoStackError(error::ErrorStack),
+    CryptoError(error::Error),
     IoError(io::Error),
     EncodeError(EncodeError),
     DecodeError(DecodeError),
@@ -53,7 +56,16 @@ impl std::fmt::Display for CoseError {
         write!(f, "{:?}", self)
     }
 }
-
+impl From<error::ErrorStack> for CoseError {
+    fn from(err: error::ErrorStack) -> CoseError {
+        CoseError::CryptoStackError(err)
+    }
+}
+impl From<error::Error> for CoseError {
+    fn from(err: error::Error) -> CoseError {
+        CoseError::CryptoError(err)
+    }
+}
 impl From<io::Error> for CoseError {
     fn from(err: io::Error) -> CoseError {
         CoseError::IoError(err)

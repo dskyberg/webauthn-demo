@@ -32,7 +32,7 @@ impl PublicKeyCredentialCreationOptions {
             challenge: make_id(32).unwrap(),
             pub_key_cred_params: vec![PublicKeyCredentialParameters::default()],
             timeout: None,
-            attestation: Some(AttestationConveyancePreference::default()),
+            attestation: None, // Some(AttestationConveyancePreference::default()),
             authenticator_selection: Some(AuthenticatorSelectionCriteria::default()),
         }
     }

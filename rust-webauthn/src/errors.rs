@@ -17,6 +17,8 @@ pub enum Error {
     UserEntityBuildError,
     #[error("Error deserializing AuthenticatorData: {0}")]
     AuthenticatorDataDeserialize(String),
+    #[error("Error deserializing public key")]
+    AuthenticatorDataPublicKeyError,
     #[error("AuthenticatorSelectionCriteriaBuilder error")]
     AuthenticatorSelectionCriteriaBuildError,
     #[error("RegistrationChallengResponseBuilder error")]
@@ -41,6 +43,14 @@ pub enum Error {
     SessionError(String),
     #[error("Internal Service Error: {0}")]
     InternalServiceError(String),
+    #[error("Assertion verification error: {0}")]
+    AssertionVerificationError(String),
+    #[error("Unsupported attestation format")]
+    AttestationFormatTypeError,
+    #[error("Challenge does not match")]
+    BadChallenge,
+    #[error("Origin does not match")]
+    BadOrigin,
 }
 
 use actix_web::{http::StatusCode, HttpResponse};

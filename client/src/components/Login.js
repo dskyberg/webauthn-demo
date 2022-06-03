@@ -45,7 +45,7 @@ export default function Login(props) {
             return
         }
 
-        webauthn.register({ name, displayName }, journal).then(response => {
+        webauthn.register({ name, displayName }).then(response => {
             setSuccess('Registration successful. Try logging in.')
         }).catch(error => setError(error.message))
     }

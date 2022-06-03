@@ -1,7 +1,7 @@
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 #[repr(i32)]
-#[derive(Debug, Serialize_repr, Deserialize_repr, Clone)]
+#[derive(Debug, Serialize_repr, Deserialize_repr, Clone, Copy)]
 #[allow(non_camel_case_types)]
 pub enum COSEAlgorithm {
     RSS512 = -259,

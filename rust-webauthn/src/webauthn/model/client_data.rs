@@ -9,10 +9,23 @@ use serde::Deserialize;
 }
 */
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub enum ClientDataType {
     #[serde(rename = "webauthn.create")]
     Create,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum TokenBindingStatus {
+    Present,
+    Supported,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct TokenBinding {
+    pub status: TokenBindingStatus,
+    pub id: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -23,7 +36,8 @@ pub struct ClientData {
     #[serde(with = "serde_stuff::base64")]
     pub challenge: Vec<u8>,
     pub origin: String,
-    pub cross_origin: bool,
+    pub cross_origin: Option<bool>,
+    pub token_binding: Option<TokenBinding>,
 }
 
 #[cfg(test)]

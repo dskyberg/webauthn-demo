@@ -1,4 +1,12 @@
 //! A collection of COSE algorithm identifiers constants.
+use super::errors::{CoseError, CoseResultWithRet};
+use openssl::bn::BigNumContext;
+use openssl::ec::EcPoint;
+use openssl::ec::{EcGroup, EcKey};
+use openssl::hash::MessageDigest;
+use openssl::nid::Nid;
+use openssl::pkey::PKey;
+use openssl::sign::Verifier;
 
 // Signing algotihtms
 pub const ES256: i32 = -7;
@@ -157,3 +165,38 @@ pub const ECDH_ALGS: [i32; 10] = [
     ECDH_SS_A192KW,
     ECDH_SS_A256KW,
 ];
+
+/// Function to verify a signature with a given key, algorithm and content that was signed.
+#[allow(clippy::ptr_arg)]
+pub fn verify(
+    alg: i32,
+    key: &Vec<u8>,
+    content: &[u8],
+    signature: &[u8],
+) -> CoseResultWithRet<bool> {
+    let group;
+    let message_digest;
+    let mut ctx = BigNumContext::new()?;
+    if alg == ES256 {
+        group = EcGroup::from_curve_name(Nid::X9_62_PRIME256V1)?;
+        message_digest = MessageDigest::sha256();
+    } else if alg == ES384 {
+        group = EcGroup::from_curve_name(Nid::SECP384R1)?;
+        message_digest = MessageDigest::sha384();
+    } else if alg == ES512 {
+        group = EcGroup::from_curve_name(Nid::SECP521R1)?;
+        message_digest = MessageDigest::sha512();
+    } else if alg == EDDSA {
+        let ec_public_key = PKey::public_key_from_der(key.as_slice())?;
+        let mut verifier = Verifier::new(MessageDigest::null(), &ec_public_key)?;
+        return Ok(verifier.verify_oneshot(signature, content)?);
+    } else {
+        return Err(CoseError::InvalidAlgorithm());
+    }
+    let point = EcPoint::from_bytes(&group, key, &mut ctx)?;
+    let ec_key = EcKey::from_public_key(&group, &point)?;
+    let final_key = PKey::from_ec_key(ec_key)?;
+    let mut verifier = Verifier::new(message_digest, &final_key)?;
+    verifier.update(content)?;
+    Ok(verifier.verify(signature)?)
+}

@@ -11,3 +11,12 @@ pub struct AttestationStatement {
     pub x5c: Option<Value>,
     pub ecdaa_key_id: Option<Value>,
 }
+
+impl AttestationStatement {
+    pub fn sig(&self) -> Vec<u8> {
+        match &self.sig {
+            Value::Bytes(bytes) => bytes.to_owned(),
+            _ => Vec::new(),
+        }
+    }
+}

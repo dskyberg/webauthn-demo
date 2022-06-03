@@ -5,6 +5,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[allow(non_snake_case)]
 pub struct RpEntity {
+    /// The RP ID can only be the "effective domain" of the RP.
+    /// The effective domain is the domain without scheme or port.
+    /// Ie, the effective domain of `http://localhost:3000` is `localhost`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -22,6 +25,7 @@ impl RpEntity {
         }
     }
 }
+
 impl Default for RpEntity {
     fn default() -> Self {
         Self::new("Swankymutt")

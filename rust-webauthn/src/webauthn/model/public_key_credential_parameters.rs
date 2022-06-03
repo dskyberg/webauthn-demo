@@ -58,7 +58,7 @@ impl PublicKeyCredentialParametersBuilder {
                     "PublicKeyCredentialParametersBuilder: missing key_type".to_owned(),
                 )
             })?,
-            alg: self.alg.clone().ok_or_else(|| {
+            alg: self.alg.ok_or_else(|| {
                 Error::BuildError("PublicKeyCredentialParametersBuilder: missing alg".to_owned())
             })?,
         })

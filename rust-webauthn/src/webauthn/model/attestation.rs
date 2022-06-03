@@ -1,31 +1,58 @@
-use crate::errors::Error;
 use serde::Deserialize;
 use serde_cbor::Value;
 
-use super::{AttestationFormatIdentifier, AttestationStatement};
+use crate::errors::Error;
+
+use super::{AttestationFormatIdentifier, AttestationStatement, AuthenticatorData};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub(crate) struct AttestationInner {
+    pub(crate) fmt: AttestationFormatIdentifier,
+    pub(crate) att_stmt: AttestationStatement,
+    pub(crate) auth_data: serde_cbor::Value,
+}
+
+#[derive(Debug)]
 pub struct Attestation {
     pub fmt: AttestationFormatIdentifier,
     pub att_stmt: AttestationStatement,
-    pub auth_data: Value,
+    pub auth_data: AuthenticatorData,
+    pub auth_data_bytes: Vec<u8>,
 }
 
-impl Attestation {
-    pub fn deserialize(cbor: &[u8]) -> Result<Attestation, Error> {
-        serde_cbor::from_slice(cbor).map_err(Error::AttestationParseError)
+impl TryFrom<&[u8]> for Attestation {
+    type Error = Error;
+    fn try_from(data: &[u8]) -> Result<Self, Self::Error> {
+        let ai: AttestationInner =
+            serde_cbor::from_slice(data).map_err(Error::AttestationParseError)?;
+        let auth_data_bytes = cbor_try_bytes(&ai.auth_data)?;
+        let auth_data = AuthenticatorData::try_from(&ai.auth_data)?;
+        Ok(Attestation {
+            fmt: ai.fmt,
+            att_stmt: ai.att_stmt,
+            auth_data,
+            auth_data_bytes,
+        })
+    }
+}
+
+fn cbor_try_bytes(value: &Value) -> Result<Vec<u8>, Error> {
+    match value {
+        Value::Bytes(bytes) => Ok(bytes.to_owned()),
+        _ => Err(Error::AttestationObjectError(
+            "Not Value::Bytes".to_string(),
+        )),
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_cbor;
 
     #[test]
     fn test_it() {
-        let cbor = vec![
+        let data: Vec<u8> = vec![
             163, 99, 102, 109, 116, 102, 112, 97, 99, 107, 101, 100, 103, 97, 116, 116, 83, 116,
             109, 116, 162, 99, 97, 108, 103, 38, 99, 115, 105, 103, 88, 72, 48, 70, 2, 33, 0, 186,
             255, 250, 233, 204, 53, 205, 105, 152, 34, 254, 243, 142, 53, 25, 119, 203, 146, 117,
@@ -45,7 +72,10 @@ mod tests {
             58, 193, 120, 185, 239, 186, 189, 37, 23, 106,
         ];
 
-        let attestation: Attestation = serde_cbor::from_slice(&cbor).expect("Not yet");
+        let attestation =
+            Attestation::try_from(data.as_slice()).expect("Attestation failed to parse");
         dbg!(&attestation);
+        let auth_data = attestation.auth_data;
+        dbg!(&auth_data);
     }
 }

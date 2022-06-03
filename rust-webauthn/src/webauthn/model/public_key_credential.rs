@@ -44,24 +44,9 @@ mod tests {
 
     #[test]
     fn test_it() {
-        let pk = r#"{
-            "rawId": "ixHgvd_w_0XNApNk2IWpl-XQjj7Y5854lapQJ2EYbc6hVUZJChSofYSDC-Lp9ztF8fPTAZAKk4yfXeSFXj7Vrs2KAQ1yvjpXLLnm",
-            "response": {
-                "attestationObject": "o2NmbXRmcGFja2VkZ2F0dFN0bXSiY2FsZyZjc2lnWEcwRQIgAcYBbyUKMhl5TWTP7OEJ43yx0mq58Ic3j0uLr-k-IsUCIQDvIi_Zj498HjemL9fAms9GzuNnnaiJzv99LmDYNWbRD2hhdXRoRGF0YVjPSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NFAAAAAK3OAAI1vMYKZIsLJfHwVQMAS4sR4L3f8P9FzQKTZNiFqZfl0I4-2OfOeJWqUCdhGG3OoVVGSQoUqH2Egwvi6fc7RfHz0wGQCpOMn13khV4-1a7NigENcr46Vyy55qUBAgMmIAEhWCDxxLwUIL40MDlYfKw41NFdNFKEMd3jqw3lt7KoP4wKsCJYIOjfaaIksuYT_mGpQBJ14cyKPWeqC85LABs1FdkUGLgR",
-                "getAuthenticatorData": {},
-                "getPublicKey": {},
-                "getPublicKeyAlgorithm": {},
-                "getTransports": {},
-                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiTG9wejdDWk8za1ZVZ25WZGkzdGREcHJxOEtSM3psb3Jva0E3RkpxZlRaRUEiLCJvcmlnaW4iOiJodHRwOi8vbG9jYWxob3N0OjMwMDAiLCJjcm9zc09yaWdpbiI6ZmFsc2V9"
-            },
-            "authenticatorAttachment": "platform",
-            "getClientExtensionResults": {},
-            "id": "ixHgvd_w_0XNApNk2IWpl-XQjj7Y5854lapQJ2EYbc6hVUZJChSofYSDC-Lp9ztF8fPTAZAKk4yfXeSFXj7Vrs2KAQ1yvjpXLLnm",
-            "type": "public-key"
-        }
-        "#;
+        let pk = include_str!("../../../test_data/platform-attestation-response.json");
 
-        let response: PublicKeyCredential = serde_json::from_str(pk).expect("Not yet");
-        dbg!(&response);
+        let pub_key_cred: PublicKeyCredential = serde_json::from_str(pk).expect("Not yet");
+        dbg!(&pub_key_cred);
     }
 }

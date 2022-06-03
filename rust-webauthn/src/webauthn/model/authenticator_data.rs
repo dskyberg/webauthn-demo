@@ -1,8 +1,11 @@
+use serde_cbor::Value;
 use std::io::Cursor;
 use std::io::Read;
 
 use crate::cbor::keys::CoseKey;
 use crate::errors::Error;
+
+use super::COSEAlgorithm;
 
 /// Byte data:
 /// - RP ID hash: 32
@@ -29,8 +32,21 @@ pub const USER_VERIFIED: u8 = 4;
 pub const ATTESTED_CREDENTIAL_DATA_INCLUDED: u8 = 64;
 pub const EXTENSION_DATA_INCLUDED: u8 = 128;
 
-impl AuthenticatorData {
-    pub fn deserialize(data: &[u8]) -> Result<Self, Error> {
+impl TryFrom<&Value> for AuthenticatorData {
+    type Error = Error;
+    fn try_from(value: &Value) -> Result<Self, Self::Error> {
+        match value {
+            Value::Bytes(data) => Self::try_from(data.as_slice()),
+            _ => Err(Error::AuthenticatorDataDeserialize(
+                "RP ID Hash".to_string(),
+            )),
+        }
+    }
+}
+
+impl TryFrom<&[u8]> for AuthenticatorData {
+    type Error = Error;
+    fn try_from(data: &[u8]) -> Result<Self, Error> {
         let front_matter_len = 55;
         let data_len: usize = data.len();
         let mut file = Cursor::new(data);
@@ -87,6 +103,14 @@ impl AuthenticatorData {
             extensions: None,
         })
     }
+}
+
+impl AuthenticatorData {
+    pub fn get_public_key(&self, alg: COSEAlgorithm) -> Result<Vec<u8>, Error> {
+        self.credential_public_key
+            .get_pub_key(alg as i32)
+            .map_err(|_| Error::AuthenticatorDataPublicKeyError)
+    }
 
     fn test_flag(&self, flag: u8) -> bool {
         (self.flags & flag) != 0
@@ -128,12 +152,16 @@ mod tests {
             193, 120, 185, 239, 186, 189, 37, 23, 106,
         ];
 
-        let auth_data = AuthenticatorData::deserialize(&data).expect("oops");
-        dbg!(&auth_data.credential_public_key);
+        let auth_data = AuthenticatorData::try_from(data.as_slice()).expect("oops");
+        let pub_key = auth_data
+            .credential_public_key
+            .get_pub_key(-7)
+            .expect("failed");
         dbg!(auth_data.is_attested_credential_data_included());
         dbg!(auth_data.is_user_verified());
         dbg!(auth_data.is_user_present());
         dbg!(auth_data.is_extension_data_included());
         dbg!(&auth_data.credential_public_key);
+        dbg!(&pub_key);
     }
 }

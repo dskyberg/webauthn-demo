@@ -1,4 +1,5 @@
 //! Module to encode/decode cose-keys/cose-keySet.
+use super::algs;
 use super::common;
 use super::errors::{CoseError, CoseResult, CoseResultWithRet};
 use cbor::{decoder::DecodeError, types::Type, Config, Decoder, Encoder};
@@ -443,6 +444,42 @@ impl CoseKey {
             }
         }
         Ok(())
+    }
+
+    pub fn get_pub_key(&self, alg: i32) -> CoseResultWithRet<Vec<u8>> {
+        let mut pub_key: Vec<u8>;
+        if algs::SIGNING_ALGS.contains(&alg) || algs::ECDH_ALGS.contains(&alg) {
+            let mut x = self
+                .x
+                .as_ref()
+                .ok_or_else(|| CoseError::MissingParameter("x".to_string()))?
+                .to_vec();
+            if x.is_empty() {
+                return Err(CoseError::MissingParameter("x".to_string()));
+            }
+            if algs::EDDSA == alg {
+                //DER prefixes
+                //302e020100300506032b657004220420 -> priv
+                //302a300506032b6570032100 -> pub
+                pub_key = vec![48, 42, 48, 5, 6, 3, 43, 101, 112, 3, 33, 0];
+                pub_key.append(&mut x);
+            } else if self.y == None {
+                pub_key = vec![3];
+                pub_key.append(&mut x);
+            } else {
+                let mut y = self
+                    .y
+                    .as_ref()
+                    .ok_or_else(|| CoseError::MissingParameter("y".to_string()))?
+                    .to_vec();
+                pub_key = vec![4];
+                pub_key.append(&mut x);
+                pub_key.append(&mut y);
+            }
+        } else {
+            return Err(CoseError::InvalidAlgorithm());
+        }
+        Ok(pub_key)
     }
 }
 
