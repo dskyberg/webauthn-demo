@@ -37,6 +37,7 @@ class lib {
 
         return base64url;
     }
+
     /*
         static decode(base64string) {
             let bufferLength = base64string.length * 0.75,
@@ -59,13 +60,13 @@ class lib {
             return bytes.buffer
         }
     */
-    /*
-     static encode(arraybuffer) {
-         return window.btoa(String.fromCharCode.apply(null, arraybuffer))
-             .replace(/\+/g, '-')
-             .replace(/\//g, '_');
-     }
- */
+
+    /*     static encode(arraybuffer) {
+            return window.btoa(String.fromCharCode.apply(null, arraybuffer))
+            //        .replace(/\+/g, '-')
+            //        .replace(/\//g, '_');
+        }
+     */
     static decode(base64String) {
         //var padding = '='.repeat((4 - base64String.length % 4) % 4);
         var base64 = (base64String)

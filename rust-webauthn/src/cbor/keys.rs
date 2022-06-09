@@ -1,11 +1,12 @@
 //! Module to encode/decode cose-keys/cose-keySet.
-use super::algs;
-use super::common;
-use super::errors::{CoseError, CoseResult, CoseResultWithRet};
 use cbor::{decoder::DecodeError, types::Type, Config, Decoder, Encoder};
+use serde::{Deserialize, Serialize};
 use std::io::Cursor;
 use std::str::from_utf8;
 
+use super::algs;
+use super::common;
+use super::errors::{CoseError, CoseResult, CoseResultWithRet};
 //COMMON PARAMETERS
 pub const D: i32 = -4;
 pub const Y: i32 = -3;
@@ -75,7 +76,7 @@ pub const CURVES_NAMES: [&str; 7] = [
 ];
 
 /// cose-key structure.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CoseKey {
     /// cose-key encoded bytes.
     pub bytes: Vec<u8>,

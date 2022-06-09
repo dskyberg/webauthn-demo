@@ -1,4 +1,5 @@
 use anyhow::Result;
+use base64urlsafedata::Base64UrlSafeData;
 use serde::{Deserialize, Serialize};
 
 use crate::errors::Error;
@@ -6,9 +7,14 @@ use crate::utils::make_id;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct UserName {
+    pub name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct UserEntity {
-    #[serde(default, with = "serde_stuff::option_base64")]
-    pub id: Option<Vec<u8>>,
+    pub id: Option<Base64UrlSafeData>,
     pub name: String,
     pub display_name: String,
 }
@@ -31,14 +37,14 @@ impl Default for UserEntity {
         Self {
             display_name: "Faky McFakerson".to_owned(),
             name: "faky.mcfakerson@mail.do".to_owned(),
-            id: Some(make_id(32).unwrap()),
+            id: Some(Base64UrlSafeData(make_id(32).unwrap())),
         }
     }
 }
 
 #[derive(Debug)]
 pub struct UserEntityBuilder {
-    id: Option<Vec<u8>>,
+    id: Option<Base64UrlSafeData>,
     name: Option<String>,
     display_name: Option<String>,
 }
@@ -70,7 +76,7 @@ impl UserEntityBuilder {
     }
 
     pub fn with_id(&mut self, id: &[u8]) -> &mut Self {
-        self.id = Some(id.to_vec());
+        self.id = Some(Base64UrlSafeData(id.to_vec()));
         self
     }
 
@@ -81,7 +87,7 @@ impl UserEntityBuilder {
 
         let id = match &self.id {
             Some(id) => Some(id.to_owned()),
-            None => Some(make_id(32)?),
+            None => Some(Base64UrlSafeData(make_id(32)?)),
         };
 
         Ok(UserEntity {

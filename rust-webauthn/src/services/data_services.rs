@@ -1,8 +1,15 @@
 use anyhow::Result;
+use base64urlsafedata::Base64UrlSafeData;
 use redis::{AsyncCommands, Value};
 
 use super::Cache;
-use crate::{errors::Error, webauthn::model::UserEntity};
+use crate::{
+    errors::Error,
+    webauthn::model::{Credential, UserEntity},
+};
+
+const USERS_KEY: &str = "users";
+const CREDS_KEY: &str = "credentials";
 
 // Service wrapper for cache and database
 ///
@@ -27,7 +34,7 @@ impl DataServices {
 
     pub async fn get_user(&self, user_name: &str) -> Result<Option<UserEntity>> {
         log::info!("get_user - getting: {}", user_name);
-        let cache_key = format!("{}:{}", "users", user_name);
+        let cache_key = format!("{}:{}", USERS_KEY, user_name);
         let mut con = self
             .cache
             .client
@@ -54,15 +61,72 @@ impl DataServices {
         }
     }
 
-    /// Dynamically create a client
+    /// Create a user
     pub async fn add_user(&self, user: &UserEntity) -> Result<()> {
         let mut con = self.cache.client.get_async_connection().await?;
-        let cache_key = format!("{}:{}", "users", user.name).to_owned();
+        let cache_key = format!("{}:{}", USERS_KEY, user.name).to_owned();
         let _: () = redis::pipe()
             .atomic()
             .set(&cache_key, serde_json::to_vec(&user)?)
             .query_async(&mut con)
             .await?;
+
+        Ok(())
+    }
+
+    async fn add_user_cred(&self, name: &str, id: &Base64UrlSafeData) -> Result<(), Error> {
+        let cache_key = format!("{}:{}:{}", USERS_KEY, CREDS_KEY, name).to_owned();
+        let mut con = self.cache.client.get_async_connection().await?;
+
+        let _: () = redis::pipe()
+            .atomic()
+            .set(
+                &cache_key,
+                serde_json::to_vec(id).map_err(Error::SerdeJsonError)?,
+            )
+            .query_async(&mut con)
+            .await?;
+        Ok(())
+    }
+
+    pub async fn get_credential(
+        &self,
+        id: &Base64UrlSafeData,
+    ) -> Result<Option<Credential>, Error> {
+        let cache_key = format!("{}:{}", CREDS_KEY, id).to_owned();
+
+        let mut con = self.cache.client.get_async_connection().await?;
+
+        let cache_response = con.get(&cache_key).await?;
+
+        match cache_response {
+            Value::Nil => Ok(None),
+            Value::Data(val) => Ok(serde_json::from_slice(&val).map_err(Error::SerdeJsonError)?),
+            _ => Err(Error::GeneralError),
+        }
+    }
+
+    /// Create a credential.
+    pub async fn add_credential_for_user(
+        &self,
+        name: &str,
+        id: &Base64UrlSafeData,
+        cred: &Credential,
+    ) -> Result<(), Error> {
+        let mut con = self.cache.client.get_async_connection().await?;
+        let cache_key = format!("{}:{}", CREDS_KEY, id).to_owned();
+
+        let _: () = redis::pipe()
+            .atomic()
+            .set(
+                &cache_key,
+                serde_json::to_vec(&cred).map_err(Error::SerdeJsonError)?,
+            )
+            .query_async(&mut con)
+            .await?;
+
+        // Bind the key to the user
+        self.add_user_cred(name, id).await?;
 
         Ok(())
     }

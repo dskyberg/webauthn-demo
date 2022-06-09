@@ -1,4 +1,5 @@
 use anyhow::Result;
+use base64urlsafedata::Base64UrlSafeData;
 use serde::{Deserialize, Serialize};
 
 use super::*;
@@ -9,8 +10,7 @@ use crate::{errors::Error, utils::make_id};
 pub struct PublicKeyCredentialCreationOptions {
     pub rp: RpEntity,
     pub user: UserEntity,
-    #[serde(with = "serde_stuff::base64")]
-    pub challenge: Vec<u8>,
+    pub challenge: Base64UrlSafeData,
     pub pub_key_cred_params: Vec<PublicKeyCredentialParameters>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timeout: Option<usize>,
@@ -29,7 +29,7 @@ impl PublicKeyCredentialCreationOptions {
         Self {
             rp: RpEntity::default(),
             user: UserEntity::default(),
-            challenge: make_id(32).unwrap(),
+            challenge: Base64UrlSafeData(make_id(32).unwrap()),
             pub_key_cred_params: vec![PublicKeyCredentialParameters::default()],
             timeout: None,
             attestation: None, // Some(AttestationConveyancePreference::default()),
@@ -73,7 +73,7 @@ impl Default for PublicKeyCredentialCreationOptions {
 pub struct PublicKeyCredentialCreationOptionsBuilder {
     rp: Option<RpEntity>,
     user: Option<UserEntity>,
-    challenge: Option<Vec<u8>>,
+    challenge: Option<Base64UrlSafeData>,
     timeout: Option<usize>,
     pub_key_cred_params: Option<Vec<PublicKeyCredentialParameters>>,
     attestation: Option<AttestationConveyancePreference>,
@@ -139,7 +139,7 @@ impl PublicKeyCredentialCreationOptionsBuilder {
 
         let challenge = match &self.challenge {
             Some(challenge) => challenge.clone(),
-            None => make_id(32)?,
+            None => Base64UrlSafeData(make_id(32)?),
         };
 
         Ok(PublicKeyCredentialCreationOptions {
@@ -158,6 +158,7 @@ impl PublicKeyCredentialCreationOptionsBuilder {
 mod tests {
     use super::*;
     use anyhow::Result;
+    use base64urlsafedata::Base64UrlSafeData;
     use serde_json;
 
     #[test]
@@ -184,7 +185,7 @@ mod tests {
     #[test]
     fn test_defaults() -> Result<()> {
         let mut challenge: PublicKeyCredentialCreationOptions = Default::default();
-        challenge.user.id = Some(make_id(32).unwrap());
+        challenge.user.id = Some(Base64UrlSafeData(make_id(32).unwrap()));
         dbg!(&challenge);
         Ok(())
     }

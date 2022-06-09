@@ -1,6 +1,7 @@
 //! Response returned from the Authenticator for creation and assertion functions
 //!
 use super::{AuthenticatorAttestationResponse, PublicKeyCredentialType};
+use base64urlsafedata::Base64UrlSafeData;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -27,10 +28,8 @@ pub struct GetClientExtensionResults {}
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PublicKeyCredential {
-    #[serde(default, with = "serde_stuff::base64")]
-    pub id: Vec<u8>,
-    #[serde(default, with = "serde_stuff::base64")]
-    pub raw_id: Vec<u8>,
+    pub id: Base64UrlSafeData,
+    pub raw_id: Base64UrlSafeData,
     pub response: AuthenticatorAttestationResponse,
     pub get_client_extension_results: GetClientExtensionResults,
     #[serde(rename = "type")]

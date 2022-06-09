@@ -1,3 +1,4 @@
+use base64urlsafedata::Base64UrlSafeData;
 use serde::Deserialize;
 
 /*
@@ -33,8 +34,7 @@ pub struct TokenBinding {
 pub struct ClientData {
     #[serde(rename = "type")]
     pub client_data_type: ClientDataType,
-    #[serde(with = "serde_stuff::base64")]
-    pub challenge: Vec<u8>,
+    pub challenge: Base64UrlSafeData,
     pub origin: String,
     pub cross_origin: Option<bool>,
     pub token_binding: Option<TokenBinding>,

@@ -1,3 +1,4 @@
+use base64urlsafedata::Base64UrlSafeData;
 use serde_cbor::Value;
 use std::io::Cursor;
 use std::io::Read;
@@ -5,7 +6,7 @@ use std::io::Read;
 use crate::cbor::keys::CoseKey;
 use crate::errors::Error;
 
-use super::COSEAlgorithm;
+use super::{COSEAlgorithm, Credential};
 
 /// Byte data:
 /// - RP ID hash: 32
@@ -16,7 +17,7 @@ use super::COSEAlgorithm;
 /// - CREDENTIAL ID: LENGTH
 /// - CREDENTIAL PUBLIC KEY: (remaining) COSE_Key
 ///
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AuthenticatorData {
     pub rp_id_hash: [u8; 32],
     pub flags: u8,
@@ -24,7 +25,7 @@ pub struct AuthenticatorData {
     pub aaguid: [u8; 16],
     pub credential_id: Vec<u8>,
     pub credential_public_key: CoseKey,
-    pub extensions: Option<Vec<u8>>,
+    pub extensions: Option<Base64UrlSafeData>,
 }
 
 pub const USER_PRESENT: u8 = 1;
@@ -129,6 +130,14 @@ impl AuthenticatorData {
     }
     pub fn is_extension_data_included(&self) -> bool {
         self.test_flag(EXTENSION_DATA_INCLUDED)
+    }
+
+    pub fn as_credential(&self) -> Credential {
+        Credential {
+            count: self.counter,
+            aaguid: self.aaguid,
+            credential_public_key: self.credential_public_key.clone(),
+        }
     }
 }
 

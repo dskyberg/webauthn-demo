@@ -1,3 +1,4 @@
+use base64urlsafedata::Base64UrlSafeData;
 use serde::Deserialize;
 use serde_cbor::Value;
 
@@ -34,6 +35,12 @@ impl TryFrom<&[u8]> for Attestation {
             auth_data,
             auth_data_bytes,
         })
+    }
+}
+impl TryFrom<&Base64UrlSafeData> for Attestation {
+    type Error = Error;
+    fn try_from(b64: &Base64UrlSafeData) -> Result<Self, Self::Error> {
+        Attestation::try_from(b64.as_ref())
     }
 }
 

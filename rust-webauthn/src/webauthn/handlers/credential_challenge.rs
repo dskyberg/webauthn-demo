@@ -1,10 +1,10 @@
 use crate::webauthn::model::{PublicKeyCredentialCreationOptions, UserEntity};
-use crate::{errors::Error, utils::b64::to_b64, DataServices};
+use crate::{errors::Error, DataServices};
 use actix_session::Session;
 use actix_web::{web, HttpRequest, HttpResponse};
 use anyhow::Result;
 
-pub async fn register_challenge_request(
+pub async fn credential_challenge(
     session: Session,
     service: web::Data<DataServices>,
     request: web::Json<UserEntity>,
@@ -33,6 +33,8 @@ pub async fn register_challenge_request(
         })?;
 
     // Save the user
+    log::info!("Saving user entity: {:?}", &pk_options.user);
+
     service
         .add_user(&pk_options.user)
         .await
@@ -43,14 +45,15 @@ pub async fn register_challenge_request(
         .insert("name", &request.name)
         .map_err(|_| Error::SessionError("Failed to update name in session".to_string()))?;
 
-    let challenge = to_b64(&pk_options.challenge);
-    log::info!("storing to session: {}", &challenge);
+    log::info!("storing to session: {}", &pk_options.challenge);
 
-    session.insert("challenge", &challenge).map_err(|_| {
-        log::info!("Failed to insert challenge in session");
-        Error::GeneralError
-    })?;
+    session
+        .insert("challenge", &pk_options.challenge)
+        .map_err(|_| {
+            log::info!("Failed to insert challenge in session");
+            Error::GeneralError
+        })?;
 
     // Return the PK Options
-    Ok(HttpResponse::Ok().json(&pk_options))
+    Ok(HttpResponse::Ok().json(pk_options))
 }

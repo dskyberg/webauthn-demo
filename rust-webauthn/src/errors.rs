@@ -7,6 +7,8 @@ pub enum Error {
     DatabaseError(#[from] mongodb::error::Error),
     #[error("Cache error: {0}")]
     CacheError(#[from] redis::RedisError),
+    #[error("{0}")]
+    SerdeJsonError(serde_json::Error),
     #[error("invalid header (expected {expected:?}, got {found:?})")]
     InvalidHeader { expected: String, found: String },
     #[error("missing attribute: {0}")]

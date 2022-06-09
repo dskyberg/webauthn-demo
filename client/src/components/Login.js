@@ -15,6 +15,7 @@ import Alert from '@mui/material/Alert'
 
 export default function Login(props) {
     const { journal } = useStore()
+    const [ceremony, setCeremony] = useState('check')
     const [name, setName] = useState('')
     const [displayName, setDisplayName] = useState('')
     const [webauthn] = useState(new Client())
@@ -35,6 +36,25 @@ export default function Login(props) {
         setAlert({ open: true, severity: "success", message })
     }
 
+    const onCheck = () => {
+        if (name === "") {
+            setWarning('Please enter a username')
+            return
+        }
+        webauthn.checkUser({ name }).then(response => {
+            if (response === null) {
+                setCeremony('register')
+                setWarning("Looks like a new user.  Let's register")
+
+            } else {
+                setDisplayName(response.displayName)
+                setCeremony('authn')
+                setSuccess(`You're already registered, ${response.displayName}. Try logging in.`)
+
+            }
+        }).catch(error => setError(error.message))
+    }
+
     const onRegister = () => {
         if (displayName === "") {
             setWarning('Please enter a display name')
@@ -46,6 +66,7 @@ export default function Login(props) {
         }
 
         webauthn.register({ name, displayName }).then(response => {
+            setCeremony('authn')
             setSuccess('Registration successful. Try logging in.')
         }).catch(error => setError(error.message))
     }
@@ -72,14 +93,15 @@ export default function Login(props) {
     };
 
     const styles = {
+        container: css`margin-top: 2em;`,
         header_css: css`margin-bottom: 1em;`,
-        textbox_css: css`width: 100%`,
+        textbox_css: css`width: 400px`,
         button_css: css`width:150px`,
         col_css: css`padding-left: 2em; padding-right: 2em;`,
     }
 
     return (
-        <Container>
+        <Container css={styles.container}>
             <Snackbar
                 anchorOrigin={{ vertical: "top", horizontal: "center" }}
                 open={alert.open}
@@ -90,53 +112,44 @@ export default function Login(props) {
                     {alert.message}
                 </Alert>
             </Snackbar>
-            <Grid container spacing={10}>
-                <Grid item xs={6}>
-                    <Typography css={styles.header_css} align="center" variant="h5">Register</Typography>
-                    <Stack alignItems="center" spacing={2}>
-                        <TextField
-                            css={styles.textbox_css}
-                            required
-                            id="outlined-required"
-                            label="Username"
-                            size="small"
-                            value={name}
-                            onChange={e => setName(e.target.value)}
-                        />
-                        <TextField
-                            css={styles.textbox_css}
-                            required
-                            id="outlined-required"
-                            label="Display Name"
-                            size="small"
-                            value={displayName}
-                            onChange={e => setDisplayName(e.target.value)}
-                        />
-                        <Button css={styles.button_css} variant="contained" onClick={onRegister}>
-                            Register
-                        </Button>
-                    </Stack>
-                </Grid>
-                <Grid item xs={6}>
-                    <Typography css={styles.header_css} align="center" variant="h5">Login</Typography>
-                    <Stack alignItems="center" spacing={2}>
-                        <TextField
-                            css={styles.textbox_css}
-                            required
-                            id="outlined-required"
-                            label="Username"
-                            size="small"
-                            value={name}
-                            onChange={e => setName(e.target.value)}
-                        />
 
-                        <Button css={styles.button_css} variant="contained" onClick={onLogin}>
-                            Login
-                        </Button>
-                    </Stack>
-                </Grid>
-
-            </Grid>
+            <Stack alignItems="center" spacing={2}>
+                <TextField
+                    css={styles.textbox_css}
+                    required
+                    id="outlined-required"
+                    label="Username"
+                    size="small"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                />
+                {(displayName !== '' || ceremony === 'register') &&
+                    <TextField
+                        css={styles.textbox_css}
+                        disabled={ceremony !== 'register'}
+                        required
+                        id="outlined-required"
+                        label="Display Name"
+                        size="small"
+                        value={displayName}
+                        onChange={e => setDisplayName(e.target.value)}
+                    />}
+                {ceremony === 'check' &&
+                    <Button css={styles.button_css} variant="contained" onClick={onCheck}>
+                        Check for credentials
+                    </Button>
+                }
+                {ceremony === 'register' &&
+                    <Button css={styles.button_css} variant="contained" onClick={onRegister}>
+                        Register
+                    </Button>
+                }
+                {ceremony === 'authn' &&
+                    <Button css={styles.button_css} variant="contained" onClick={onLogin}>
+                        Login
+                    </Button>
+                }
+            </Stack>
 
         </Container >
     )

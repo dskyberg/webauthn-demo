@@ -1,6 +1,7 @@
 //! The AuthenticatorAttestationResponse will either contain an attestationObject
 //! (for creation responses) or authenticatorData (for authentication responses).
 //! One of the two must be present.
+use base64urlsafedata::Base64UrlSafeData;
 use openssl::sha::sha256;
 use serde::Deserialize;
 
@@ -20,12 +21,10 @@ pub struct GetTransports {}
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AuthenticatorAttestationResponse {
-    #[serde(default, with = "serde_stuff::option_base64")]
-    pub attestation_object: Option<Vec<u8>>,
-    #[serde(default, with = "serde_stuff::option_base64")]
-    pub authenticator_data: Option<Vec<u8>>,
-    #[serde(default, rename = "clientDataJSON", with = "serde_stuff::base64")]
-    pub client_data_json: Vec<u8>,
+    pub attestation_object: Base64UrlSafeData,
+    pub authenticator_data: Option<Base64UrlSafeData>,
+    #[serde(rename = "clientDataJSON")]
+    pub client_data_json: Base64UrlSafeData,
     // Bogus baggage
     pub get_authenticator_data: GetAuthenticatorData,
     pub get_public_key: GetPublicKey,
@@ -35,21 +34,22 @@ pub struct AuthenticatorAttestationResponse {
 
 impl AuthenticatorAttestationResponse {
     pub fn get_client_data(&self) -> Result<ClientData, Error> {
-        serde_json::from_slice::<ClientData>(&self.client_data_json)
+        serde_json::from_slice::<ClientData>(self.client_data_json.as_ref())
             .map_err(Error::ClientDataParseError)
     }
 
     /// Throws an error if no attStmt was provided
     pub fn attestation(&self) -> Result<Attestation, Error> {
-        let attestation_vec = self.attestation_object.as_ref().ok_or_else(|| {
-            Error::AttestationObjectError("No attStmt present in Attestation Obiect".to_string())
-        })?;
-        Attestation::try_from(attestation_vec.as_slice())
+        Attestation::try_from(self.attestation_object.as_ref())
     }
 
     /// The challenge should be provided from the session.
     /// The origin is the RP url, such as "http://localhost:3000"
-    pub fn verify(&self, origin: &str, challenge: &[u8]) -> Result<bool, Error> {
+    pub fn verify(
+        &self,
+        origin: &str,
+        challenge: &Base64UrlSafeData,
+    ) -> Result<AuthenticatorData, Error> {
         let attestation = self.attestation()?;
         match attestation.fmt {
             AttestationFormatIdentifier::Packed => self.verify_packed(origin, challenge),
@@ -58,11 +58,15 @@ impl AuthenticatorAttestationResponse {
     }
 
     /// Verify the response provided in packed format.
-    fn verify_packed(&self, origin: &str, challenge: &[u8]) -> Result<bool, Error> {
+    fn verify_packed(
+        &self,
+        origin: &str,
+        challenge: &Base64UrlSafeData,
+    ) -> Result<AuthenticatorData, Error> {
         let client_data = self.get_client_data()?;
 
         // Compare the challenges
-        if client_data.challenge != challenge {
+        if client_data.challenge != *challenge {
             dbg!(&challenge);
             dbg!(&client_data.challenge);
             return Err(Error::BadChallenge);
@@ -100,7 +104,7 @@ impl AuthenticatorAttestationResponse {
         let verification_data: Vec<u8> = attestation
             .auth_data_bytes
             .iter()
-            .chain(sha256(&self.client_data_json).iter())
+            .chain(sha256(self.client_data_json.as_ref()).iter())
             .copied()
             .collect();
 
@@ -115,7 +119,12 @@ impl AuthenticatorAttestationResponse {
         )
         .map_err(|_| Error::AttestationObjectError("Failed".to_string()))?;
 
-        Ok(result)
+        if !result {
+            return Err(Error::AssertionVerificationError(
+                "Assertion signature did not verify".to_string(),
+            ));
+        }
+        Ok(attestation.auth_data.clone())
     }
 }
 
@@ -124,15 +133,16 @@ mod tests {
 
     use crate::{errors::Error, webauthn::model::AuthenticatorAttestationResponse};
 
+    use base64urlsafedata::Base64UrlSafeData;
     use serde_json;
 
     #[test]
     fn test_it() -> Result<(), Error> {
         // The challenge would be provided from a persistent source, such as the session
-        let challenge: [u8; 33] = [
+        let challenge = Base64UrlSafeData(vec![
             239, 136, 194, 248, 21, 126, 34, 40, 3, 39, 28, 78, 243, 196, 218, 40, 34, 68, 122,
             134, 178, 243, 62, 135, 74, 78, 9, 215, 222, 53, 44, 18, 0,
-        ];
+        ]);
         let origin = "http://localhost:3000";
 
         let json = r#"{
@@ -147,8 +157,8 @@ mod tests {
         let response: AuthenticatorAttestationResponse =
             serde_json::from_str(json).expect("not yet");
         //dbg!(&response);
-        let result = response.verify(origin, &challenge)?;
-        assert!(result);
+        let result = response.verify(origin, &challenge);
+        assert!(result.is_ok());
         Ok(())
     }
 }

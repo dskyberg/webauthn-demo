@@ -18,10 +18,16 @@ class Client {
     constructor(options = {}) {
         const defaults = {
             pathPrefix: '/webauthn',
-            credentialEndpoint: '/register',
-            assertionEndpoint: '/login',
-            challengeEndpoint: '/response',
+            credential: {
+                challengeEndpoint: '/credential/challenge',
+                responseEndpoint: '/credential/response',
+            },
+            assertion: {
+                challengeEndpoint: '/assertion/challenge',
+                responseEndpoint: '/assertion/response',
+            },
             logoutEndpoint: '/logout',
+            userEndpoint: '/user'
         }
 
         Object.assign(this, defaults, options)
@@ -81,8 +87,33 @@ class Client {
         return getAssert
     }
 
+    async checkUser(formBody) {
+        const response = await fetch(`${this.pathPrefix}${this.userEndpoint}`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formBody)
+        })
+
+        if (response.status === 404) {
+            console.log('checkUser - not found. Returning null')
+            const failureMessage = (await response.json()).message
+            const errorMessage = 'User not found'
+            return null
+        }
+
+        if (response.status < 200 || response.status > 205) {
+            throw new Error('Server responded with error.')
+        }
+
+        return await response.json()
+
+    }
+
     async getMakeCredentialsChallenge(formBody) {
-        const response = await fetch(`${this.pathPrefix}${this.credentialEndpoint}`, {
+        const response = await fetch(`${this.pathPrefix}${this.credential.challengeEndpoint}`, {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -104,8 +135,9 @@ class Client {
         return await response.json()
     }
 
-    async sendWebAuthnResponse(body) {
-        const response = await fetch(`${this.pathPrefix}${this.challengeEndpoint}`, {
+    async sendWebAuthnResponse(ceremony, body) {
+        console.log("Endpoint:", this[ceremony].responseEndpoint)
+        const response = await fetch(`${this.pathPrefix}${this[ceremony].responseEndpoint}`, {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -122,7 +154,7 @@ class Client {
     }
 
     async getGetAssertionChallenge(formBody) {
-        const response = await fetch(`${this.pathPrefix}${this.assertionEndpoint}`, {
+        const response = await fetch(`${this.pathPrefix}${this.assertion.challengeEndpoint}`, {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -138,36 +170,34 @@ class Client {
         return await response.json()
     }
 
-    async register(data = {}) {
-        const challenge = await this.getMakeCredentialsChallenge(data)
-        console.log('REGISTER CHALLENGE', challenge)
+    async check(data = {}) {
 
+    }
+
+    async register(data = {}) {
+        // Request challenge options from the RP
+        const challenge = await this.getMakeCredentialsChallenge(data)
+        // Base64 decode stuff,
         const publicKey = Client.preformatMakeCredReq(challenge)
-        console.log('REGISTER PUBLIC KEY', publicKey)
+
+        console.log('CREDENTIAL CHALLENGE', publicKey)
 
         const credential = await navigator.credentials.create({ publicKey })
-        console.log('REGISTER CREDENTIAL', credential)
+        console.log('CREDENTIAL RESPONSE', credential)
 
         const credentialResponse = Client.publicKeyCredentialToJSON(credential)
-        console.log('REGISTER RESPONSE', credentialResponse)
-
-        return await this.sendWebAuthnResponse(credentialResponse)
+        return await this.sendWebAuthnResponse('credential', credentialResponse)
     }
 
     async login(data = {}) {
         const challenge = await this.getGetAssertionChallenge(data)
-        console.log('LOGIN CHALLENGE', challenge)
-
         const publicKey = Client.preformatGetAssertReq(challenge)
-        console.log('LOGIN PUBLIC KEY', publicKey)
+        console.log('ASSERTION CHALLENGE', challenge)
 
         const credential = await navigator.credentials.get({ publicKey })
-        console.log('LOGIN CREDENTIAL', credential)
-
+        console.log('ASSERTION RESPONSE', credentialResponse)
         const credentialResponse = Client.publicKeyCredentialToJSON(credential)
-        console.log('LOGIN RESPONSE', credentialResponse)
-
-        return await this.sendWebAuthnResponse(credentialResponse)
+        return await this.sendWebAuthnResponse('assertion', credentialResponse)
     }
 
     async logout() {
