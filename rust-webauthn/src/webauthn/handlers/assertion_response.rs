@@ -2,40 +2,32 @@
 
 use actix_session::Session;
 use actix_web::{web, HttpRequest, HttpResponse};
-use anyhow::Result;
+
 use base64urlsafedata::Base64UrlSafeData;
 
 use crate::{
     errors::Error,
-    webauthn::model::{PublicKeyCredential, PublicKeyCredentialType},
+    webauthn::model::{AssertionPublicKeyCredential, PublicKeyCredentialType},
     DataServices,
 };
 
 pub async fn assertion_response(
     session: Session,
     service: web::Data<DataServices>,
-    credential: web::Json<PublicKeyCredential>,
+    credential: web::Json<AssertionPublicKeyCredential>,
     _req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    log::trace!("PublicKeyCredential: {:?}", &credential);
+    //log::info!("PublicKeyCredential: {:?}", &credential);
 
     // Get the challenge and name that was placed in the session
     // by register_challenge_request
-    let challenge = session
-        .get::<String>("challenge")
-        .map_err(|_| Error::SessionError("Failed to get challenge from session".to_string()))?;
-    if challenge.is_none() {
-        log::error!("Failed to get challenge from session");
-        return Ok(
-            HttpResponse::InternalServerError().json(r#"{ "message": "No challenge in session" }"#)
-        );
-    }
     // The challenge should have been stored as Base64.  Decode it
-    let challenge = Base64UrlSafeData::try_from(challenge.unwrap().as_str());
+    let challenge = b64_from_session(&session, "challenge");
     if challenge.is_err() {
-        log::info!("Error decoding challenge");
-        return Ok(HttpResponse::InternalServerError()
-            .json(r#"{ "message": "Error decoding challenge" }"#));
+        log::info!("Error getting challenge");
+        return Ok(
+            HttpResponse::InternalServerError().json(r#"{ "message": "Error getting challenge" }"#)
+        );
     }
     let challenge = challenge.unwrap();
 
@@ -54,15 +46,19 @@ pub async fn assertion_response(
     // postint.  Start with step 7
 
     // 7.1 Step 7
-    if credential.key_type != PublicKeyCredentialType::PublicKey {
+    if credential.type_ != PublicKeyCredentialType::PublicKey {
         // Bad type attribute
         return Ok(HttpResponse::BadRequest()
             .json(r#"{ "message": "response type must be 'public-key" }"#));
     }
 
+    // Get the credential from the data store
+    let cred = service.get_user_credential(&name).await?.unwrap();
+
     // Verify the response
     let origin = "http://localhost:3000";
-    let result = credential.response.verify(origin, &challenge);
+
+    let result = credential.response.verify(origin, &challenge, &cred);
     if let Err(err) = result {
         match err {
             Error::BadChallenge => {
@@ -76,25 +72,25 @@ pub async fn assertion_response(
             _ => return Err(err),
         }
     }
-    let auth_data = result.unwrap();
-
-    // The response is valid.
-    // Step 22: Verify that the credentialId is not being used
-    // The authData is returnef from the verify function
-    let id = Base64UrlSafeData(auth_data.credential_id.clone());
-    let cache_response = service
-        .get_credential(&id)
-        .await
-        .map_err(|_| Error::GeneralError)?;
-
-    if let Some(_creds) = cache_response {
-        log::info!("Credential ID is already used");
-        return Ok(HttpResponse::Unauthorized().json(r#"{ "message": "credentialId in use" }"#));
-    }
-    // Save the credential
-    let _ = service
-        .add_credential_for_user(&name, &id, &auth_data.as_credential())
-        .await?;
 
     Ok(HttpResponse::Ok().json(r#"{"status": "ok"}"#))
+}
+
+fn b64_from_session(session: &Session, name: &str) -> Result<Base64UrlSafeData, Error> {
+    // Get the challenge and name that was placed in the session
+    // by register_challenge_request
+    match session
+        .get::<String>(name)
+        .map_err(|_| Error::SessionError(format!("Failed to get {} from session", name)))?
+    {
+        Some(val) => {
+            let x = Base64UrlSafeData::try_from(val.as_str())
+                .map_err(|_| Error::Base64UrlSafeDataError)?;
+            Ok(x)
+        }
+        None => Err(Error::SessionError(format!(
+            "Failed to get {} from session",
+            name
+        ))),
+    }
 }

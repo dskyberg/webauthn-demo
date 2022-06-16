@@ -3,6 +3,8 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum Error {
+    #[error("Base64UrlSafeData try_from error")]
+    Base64UrlSafeDataError,
     #[error("mongodb error: {0}")]
     DatabaseError(#[from] mongodb::error::Error),
     #[error("Cache error: {0}")]
@@ -53,6 +55,8 @@ pub enum Error {
     BadChallenge,
     #[error("Origin does not match")]
     BadOrigin,
+    #[error("Attribute not found: {0}")]
+    AttributeNotFound(String),
 }
 
 use actix_web::{http::StatusCode, HttpResponse};

@@ -1,10 +1,10 @@
-use crate::webauthn::model::{PublicKeyCredentialCreationOptions, UserEntity};
-use crate::{errors::Error, DataServices};
 use actix_session::Session;
 use actix_web::{web, HttpRequest, HttpResponse};
-use anyhow::Result;
 
-pub async fn credential_challenge(
+use crate::webauthn::model::{PublicKeyCredentialCreationOptions, UserEntity};
+use crate::{errors::Error, DataServices};
+
+pub async fn creation_challenge(
     session: Session,
     service: web::Data<DataServices>,
     request: web::Json<UserEntity>,
@@ -24,13 +24,13 @@ pub async fn credential_challenge(
             HttpResponse::Forbidden().body(format!("User already registered: {}", request.name))
         );
     }
+    let user = request.into_inner();
 
     // Create the PublicKey Creation Options
-    let pk_options =
-        PublicKeyCredentialCreationOptions::from_user_entity(&request).map_err(|_| {
-            log::info!("Failed to create options from UserEntity");
-            Error::InternalServiceError("Failure".to_string())
-        })?;
+    let pk_options = PublicKeyCredentialCreationOptions::try_from(&user).map_err(|_| {
+        log::info!("Failed to create options from UserEntity");
+        Error::InternalServiceError("Failure".to_string())
+    })?;
 
     // Save the user
     log::info!("Saving user entity: {:?}", &pk_options.user);
@@ -42,7 +42,7 @@ pub async fn credential_challenge(
 
     // Update the session for the next step (response).
     session
-        .insert("name", &request.name)
+        .insert("name", &user.name)
         .map_err(|_| Error::SessionError("Failed to update name in session".to_string()))?;
 
     log::info!("storing to session: {}", &pk_options.challenge);

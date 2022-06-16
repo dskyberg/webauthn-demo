@@ -1,5 +1,4 @@
 use crate::errors::Error;
-use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -55,9 +54,9 @@ impl RpEntityBuilder {
         self
     }
 
-    pub fn build(&self) -> Result<RpEntity> {
+    pub fn build(&self) -> Result<RpEntity, Error> {
         if self.name.is_none() && self.id.is_none() {
-            bail!(Error::MissingIdAndName);
+            return Err(Error::MissingIdAndName);
         }
 
         Ok(RpEntity {
@@ -75,12 +74,11 @@ impl Default for RpEntityBuilder {
 
 #[cfg(test)]
 mod tests {
-    use anyhow::Result;
-    //use serde_json;
     use super::*;
+    use crate::errors::Error;
 
     #[test]
-    fn test_id() -> Result<()> {
+    fn test_id() -> Result<(), Error> {
         let rp = RpEntity::builder().with_name("Swankymutt").build()?;
         dbg!(&rp);
 

@@ -12,6 +12,8 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub enum ClientDataType {
+    #[serde(rename = "webauthn.get")]
+    Get,
     #[serde(rename = "webauthn.create")]
     Create,
 }

@@ -6,26 +6,87 @@ use std::io::Read;
 use crate::cbor::keys::CoseKey;
 use crate::errors::Error;
 
-use super::{COSEAlgorithm, Credential};
+use super::*;
+
+/// ----- attestedCredentialData -------
+/// - AAGUID: 16
+/// - LENGTH: 2
+/// - CREDENTIAL ID: LENGTH
+/// - CREDENTIAL PUBLIC KEY: (remaining) COSE_Key
+
+#[derive(Debug, Clone)]
+pub struct CredentialData {
+    pub aaguid: [u8; 16],
+    pub credential_id: Vec<u8>,
+    pub credential_public_key: CoseKey,
+    pub extensions: Option<Base64UrlSafeData>,
+}
+
+impl CredentialData {
+    pub fn get_public_key(&self, alg: COSEAlgorithm) -> Result<Vec<u8>, Error> {
+        self.credential_public_key
+            .get_pub_key(alg as i32)
+            .map_err(|_| Error::AuthenticatorDataPublicKeyError)
+    }
+}
+
+impl TryFrom<&[u8]> for CredentialData {
+    type Error = Error;
+    fn try_from(data: &[u8]) -> Result<Self, Error> {
+        log::info!("CredentialData::try_from start");
+        let data_len: usize = data.len();
+        let mut remainder = data_len;
+        let mut file = Cursor::new(data);
+
+        let mut aaguid: [u8; 16] = [0; 16];
+        let bytes_read = file
+            .read(&mut aaguid)
+            .map_err(|_| Error::AuthenticatorDataDeserialize("AAGUID".to_string()))?;
+        remainder -= bytes_read;
+
+        let mut length: [u8; 2] = [0; 2];
+        let bytes_read = file
+            .read(&mut length)
+            .map_err(|_| Error::AuthenticatorDataDeserialize("LENGTH".to_string()))?;
+        remainder -= bytes_read;
+
+        let length = u16::from_be_bytes(length);
+
+        let mut credential_id: Vec<u8> = vec![0; length as usize];
+        let bytes_read = file
+            .read(&mut credential_id)
+            .map_err(|_| Error::AuthenticatorDataDeserialize("CREDENTIAL ID".to_string()))?;
+
+        remainder -= bytes_read;
+
+        let mut credential_public_key_bytes: Vec<u8> = vec![0; remainder];
+        let _ = file
+            .read(&mut credential_public_key_bytes)
+            .map_err(|_| Error::AuthenticatorDataDeserialize("COSE PUBLICKEY".to_string()))?;
+        let credential_public_key =
+            CoseKey::decode_bytes(&credential_public_key_bytes).map_err(Error::CoseKeyError)?;
+
+        log::info!("CredentialData::try_from succeeded");
+        Ok(Self {
+            aaguid,
+            credential_id,
+            credential_public_key,
+            extensions: None,
+        })
+    }
+}
 
 /// Byte data:
 /// - RP ID hash: 32
 /// - FLAGS: 1
 /// - COUNTER: 4 (big endian)
-/// - AAGUID: 16
-/// - LENGTH: 2
-/// - CREDENTIAL ID: LENGTH
-/// - CREDENTIAL PUBLIC KEY: (remaining) COSE_Key
-///
+/// - attestedCredentialData
 #[derive(Debug, Clone)]
 pub struct AuthenticatorData {
     pub rp_id_hash: [u8; 32],
     pub flags: u8,
     pub counter: u32,
-    pub aaguid: [u8; 16],
-    pub credential_id: Vec<u8>,
-    pub credential_public_key: CoseKey,
-    pub extensions: Option<Base64UrlSafeData>,
+    pub credential_data: Option<CredentialData>,
 }
 
 pub const USER_PRESENT: u8 = 1;
@@ -48,7 +109,7 @@ impl TryFrom<&Value> for AuthenticatorData {
 impl TryFrom<&[u8]> for AuthenticatorData {
     type Error = Error;
     fn try_from(data: &[u8]) -> Result<Self, Error> {
-        let front_matter_len = 55;
+        let front_matter_len = 37;
         let data_len: usize = data.len();
         let mut file = Cursor::new(data);
 
@@ -69,48 +130,45 @@ impl TryFrom<&[u8]> for AuthenticatorData {
             .map_err(|_| Error::AuthenticatorDataDeserialize("COUNTER".to_string()))?;
         let counter = u32::from_be_bytes(counter);
 
-        let mut aaguid: [u8; 16] = [0; 16];
-        let _ = file
-            .read(&mut aaguid)
-            .map_err(|_| Error::AuthenticatorDataDeserialize("AAGUID".to_string()))?;
+        // If attested credential data was included, unpack it
+        let credential_data = match (flags & ATTESTED_CREDENTIAL_DATA_INCLUDED) != 0 {
+            true => {
+                let remainder = data_len - front_matter_len;
+                let mut bytes: Vec<u8> = vec![0; remainder];
+                let bytes_read = file.read(&mut bytes).map_err(|_| {
+                    Error::AuthenticatorDataDeserialize("Credentialdata".to_string())
+                })?;
+                if remainder != bytes_read {
+                    log::info!("Oops!! Too few bytes read!");
+                }
+                Some(CredentialData::try_from(bytes.as_ref())?)
+            }
+            false => None,
+        };
 
-        let mut length: [u8; 2] = [0; 2];
-        let _ = file
-            .read(&mut length)
-            .map_err(|_| Error::AuthenticatorDataDeserialize("LENGTH".to_string()))?;
-        let length = u16::from_be_bytes(length);
-
-        let mut credential_id: Vec<u8> = vec![0; length as usize];
-        let _ = file
-            .read(&mut credential_id)
-            .map_err(|_| Error::AuthenticatorDataDeserialize("CREDENTIAL ID".to_string()))?;
-
-        let remainder = data_len - length as usize - front_matter_len;
-
-        let mut credential_public_key_bytes: Vec<u8> = vec![0; remainder];
-        let _ = file
-            .read(&mut credential_public_key_bytes)
-            .map_err(|_| Error::AuthenticatorDataDeserialize("COSE PUBLICKEY".to_string()))?;
-        let credential_public_key =
-            CoseKey::decode_bytes(&credential_public_key_bytes).map_err(Error::CoseKeyError)?;
-
+        log::info!("AuthenticatorData::try_from succeeded");
         Ok(Self {
             rp_id_hash,
             flags,
             counter,
-            aaguid,
-            credential_id,
-            credential_public_key,
-            extensions: None,
+            credential_data,
         })
     }
 }
 
 impl AuthenticatorData {
     pub fn get_public_key(&self, alg: COSEAlgorithm) -> Result<Vec<u8>, Error> {
-        self.credential_public_key
-            .get_pub_key(alg as i32)
-            .map_err(|_| Error::AuthenticatorDataPublicKeyError)
+        match &self.credential_data {
+            Some(credential_data) => credential_data.get_public_key(alg),
+            None => Err(Error::AuthenticatorDataPublicKeyError),
+        }
+    }
+
+    pub fn credential_data(&self) -> Result<CredentialData, Error> {
+        match &self.credential_data {
+            Some(credential_data) => Ok(credential_data.clone()),
+            None => Err(Error::AuthenticatorDataPublicKeyError),
+        }
     }
 
     fn test_flag(&self, flag: u8) -> bool {
@@ -133,10 +191,13 @@ impl AuthenticatorData {
     }
 
     pub fn as_credential(&self) -> Credential {
+        let credential_data = self.credential_data().expect("damnit");
         Credential {
+            id: Base64UrlSafeData(credential_data.credential_id.clone()),
+            type_: PublicKeyCredentialType::PublicKey,
             count: self.counter,
-            aaguid: self.aaguid,
-            credential_public_key: self.credential_public_key.clone(),
+            aaguid: credential_data.aaguid,
+            credential_public_key: credential_data.credential_public_key,
         }
     }
 }
@@ -163,6 +224,8 @@ mod tests {
 
         let auth_data = AuthenticatorData::try_from(data.as_slice()).expect("oops");
         let pub_key = auth_data
+            .credential_data()
+            .expect("oops")
             .credential_public_key
             .get_pub_key(-7)
             .expect("failed");
@@ -170,7 +233,12 @@ mod tests {
         dbg!(auth_data.is_user_verified());
         dbg!(auth_data.is_user_present());
         dbg!(auth_data.is_extension_data_included());
-        dbg!(&auth_data.credential_public_key);
+        dbg!(
+            &auth_data
+                .credential_data()
+                .expect("oops")
+                .credential_public_key
+        );
         dbg!(&pub_key);
     }
 }

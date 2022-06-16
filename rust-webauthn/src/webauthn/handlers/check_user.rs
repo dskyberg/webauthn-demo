@@ -2,7 +2,6 @@ use crate::webauthn::model::UserName;
 use crate::{errors::Error, DataServices};
 use actix_session::Session;
 use actix_web::{web, HttpRequest, HttpResponse};
-use anyhow::Result;
 
 pub async fn check_user(
     session: Session,

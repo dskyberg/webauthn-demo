@@ -72,7 +72,7 @@ export default function Login(props) {
     }
 
     const onLogin = () => {
-        if (displayName === "") {
+        if (name === "") {
             setWarning('Please enter a username')
             return
         }

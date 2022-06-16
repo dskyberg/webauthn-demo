@@ -1,10 +1,10 @@
-use anyhow::{anyhow, Result};
+use crate::errors::Error;
 use ring::rand::SecureRandom;
 
-pub fn make_id(size: usize) -> Result<Vec<u8>> {
+pub fn make_id(size: usize) -> Result<Vec<u8>, Error> {
     let mut random: Vec<u8> = vec![0; size];
     let sr = ring::rand::SystemRandom::new();
-    sr.fill(&mut random).map_err(|_| anyhow!("Rand failed"))?;
+    sr.fill(&mut random).map_err(|_| Error::GeneralError)?;
     Ok(random)
 }
 

@@ -1,7 +1,7 @@
-use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 use super::*;
+use crate::errors::Error;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -82,7 +82,7 @@ impl AuthenticatorSelectionCriteriaBuilder {
 
     /// Note: if require_resident_key is Some(true) then
     /// resident_key must either be None or
-    pub fn build(&self) -> Result<AuthenticatorSelectionCriteria> {
+    pub fn build(&self) -> Result<AuthenticatorSelectionCriteria, Error> {
         Ok(AuthenticatorSelectionCriteria {
             authenticator_attachment: self.authenticator_attachment.clone(),
             resident_key: self.resident_key.clone(),
@@ -101,18 +101,17 @@ impl Default for AuthenticatorSelectionCriteriaBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anyhow::Result;
     use serde_json;
     #[test]
 
-    fn test_it() -> Result<()> {
+    fn test_it() -> Result<(), crate::errors::Error> {
         let asc = AuthenticatorSelectionCriteria::builder()
             .with_authenticator_attachment(AuthenticatorAttachment::Platform)
             .with_resident_key(ResidentKeyRequirement::Discouraged)
             .with_user_verification(UserVerificationRequirement::Preferred)
             .build()?;
         dbg!(&asc);
-        let result = serde_json::to_string(&asc)?;
+        let result = serde_json::to_string(&asc).map_err(Error::SerdeJsonError)?;
 
         dbg!(&result);
         Ok(())

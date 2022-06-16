@@ -19,11 +19,11 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 web::scope("/credential")
                     .service(
                         web::resource("/challenge")
-                            .route(web::post().to(handlers::credential_challenge)),
+                            .route(web::post().to(handlers::creation_challenge)),
                     )
                     .service(
                         web::resource("/response")
-                            .route(web::post().to(handlers::credential_response)),
+                            .route(web::post().to(handlers::creation_response)),
                     ),
             )
             .service(

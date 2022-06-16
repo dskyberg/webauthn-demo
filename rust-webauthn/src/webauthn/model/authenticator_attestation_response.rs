@@ -1,5 +1,4 @@
-//! The AuthenticatorAttestationResponse will either contain an attestationObject
-//! (for creation responses) or authenticatorData (for authentication responses).
+//! The AuthenticatorAttestationResponse is sent as a result of credential creation
 //! One of the two must be present.
 use base64urlsafedata::Base64UrlSafeData;
 use openssl::sha::sha256;
@@ -22,14 +21,13 @@ pub struct GetTransports {}
 #[serde(rename_all = "camelCase")]
 pub struct AuthenticatorAttestationResponse {
     pub attestation_object: Base64UrlSafeData,
-    pub authenticator_data: Option<Base64UrlSafeData>,
     #[serde(rename = "clientDataJSON")]
     pub client_data_json: Base64UrlSafeData,
     // Bogus baggage
-    pub get_authenticator_data: GetAuthenticatorData,
-    pub get_public_key: GetPublicKey,
-    pub get_public_key_algorithm: GetPublicKeyAlgorithm,
-    pub get_transports: GetTransports,
+    pub get_authenticator_data: Option<GetAuthenticatorData>,
+    pub get_public_key: Option<GetPublicKey>,
+    pub get_public_key_algorithm: Option<GetPublicKeyAlgorithm>,
+    pub get_transports: Option<GetTransports>,
 }
 
 impl AuthenticatorAttestationResponse {
@@ -40,7 +38,7 @@ impl AuthenticatorAttestationResponse {
 
     /// Throws an error if no attStmt was provided
     pub fn attestation(&self) -> Result<Attestation, Error> {
-        Attestation::try_from(self.attestation_object.as_ref())
+        Attestation::try_from(&self.attestation_object)
     }
 
     /// The challenge should be provided from the session.
@@ -50,6 +48,7 @@ impl AuthenticatorAttestationResponse {
         origin: &str,
         challenge: &Base64UrlSafeData,
     ) -> Result<AuthenticatorData, Error> {
+        log::info!("Verify: start");
         let attestation = self.attestation()?;
         match attestation.fmt {
             AttestationFormatIdentifier::Packed => self.verify_packed(origin, challenge),
@@ -63,7 +62,10 @@ impl AuthenticatorAttestationResponse {
         origin: &str,
         challenge: &Base64UrlSafeData,
     ) -> Result<AuthenticatorData, Error> {
+        log::info!("Packed Verify: start");
+
         let client_data = self.get_client_data()?;
+        log::info!("Got client data: {:?}", &client_data);
 
         // Compare the challenges
         if client_data.challenge != *challenge {
@@ -72,29 +74,35 @@ impl AuthenticatorAttestationResponse {
             return Err(Error::BadChallenge);
         }
 
+        log::info!("Verify: challenge matched");
+
         // Verify the origin
         if client_data.origin != origin {
             return Err(Error::BadOrigin);
         }
+        log::info!("Verify: origin matched");
 
         // 7.1 step 7: Verify the type
         if client_data.client_data_type != ClientDataType::Create {
             // Wrong type
             return Err(Error::AssertionVerificationError(
-                "Not a credential assertion".to_string(),
+                "Not a credential attestation".to_string(),
             ));
         }
         let attestation = &self.attestation()?;
+        log::info!("Verify: client data type is webauthn.get");
 
         // Verify the rp_id hash
         // If no RP ID is sent by the RP, then the origin domain is used.
         // ( just the domain.  No scheme or port)
+        // TODO: Stop hard coding localhost
         let rp_id_hash = sha256("localhost".as_bytes());
         if rp_id_hash != attestation.auth_data.rp_id_hash {
             return Err(Error::AssertionVerificationError(
                 "RP ID Hash does not match".to_string(),
             ));
         }
+        log::info!("Verify: rp_id_hash matched");
 
         //------------- Verify the signature --------------
 
@@ -131,32 +139,23 @@ impl AuthenticatorAttestationResponse {
 #[cfg(test)]
 mod tests {
 
-    use crate::{errors::Error, webauthn::model::AuthenticatorAttestationResponse};
-
-    use base64urlsafedata::Base64UrlSafeData;
+    use super::*;
+    use crate::errors::Error;
     use serde_json;
 
     #[test]
     fn test_it() -> Result<(), Error> {
-        // The challenge would be provided from a persistent source, such as the session
-        let challenge = Base64UrlSafeData(vec![
-            239, 136, 194, 248, 21, 126, 34, 40, 3, 39, 28, 78, 243, 196, 218, 40, 34, 68, 122,
-            134, 178, 243, 62, 135, 74, 78, 9, 215, 222, 53, 44, 18, 0,
-        ]);
+        let json = include_str!("../../../test_data/platform-attestation-response.json");
         let origin = "http://localhost:3000";
-
-        let json = r#"{
-            "attestationObject": "o2NmbXRmcGFja2VkZ2F0dFN0bXSiY2FsZyZjc2lnWEYwRAIgIEalxmKbAUAS7MpqUGaUDkSMCPLGJwEUVnq7zNYxY_YCIGkDeWLzdTYt2G287fYvtdN5b7aW1MomLHdON5y8XbLaaGF1dGhEYXRhWM1Jlg3liA6MaHQ0Fw9kdmBbj-SuuaKGMseZXPO6gx2XY0UAAAAArc4AAjW8xgpkiwsl8fBVAwBJSp48IN0iSogTuP_8VyjBVDbQwUE6SJpQP-pcxvlrwS5WM2S4xc1sMQ-hQ1o9pTEx5jW_in-vQ-yN8EzGv94-A4CfdQM1r-D9NqUBAgMmIAEhWCCGpyMiBThl0gi2R1amkHlL6x5A2ejQxelDPd32w7VUECJYICPVkYjScnZYEOmO9W8fHQlrzcxSgV_A4eUoHcjQ8kIt",
-            "getAuthenticatorData": {},
-            "getPublicKey": {},
-            "getPublicKeyAlgorithm": {},
-            "getTransports": {},
-            "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiNzRqQy1CVi1JaWdESnh4Tzg4VGFLQ0pFZW9heTh6NkhTazRKMTk0MUxCSUEiLCJvcmlnaW4iOiJodHRwOi8vbG9jYWxob3N0OjMwMDAiLCJjcm9zc09yaWdpbiI6ZmFsc2V9"
-        }"#;
 
         let response: AuthenticatorAttestationResponse =
             serde_json::from_str(json).expect("not yet");
         //dbg!(&response);
+
+        // The challenge would be provided from a persistent source, such as the session
+        // For testing, just grab the one in the response.
+        let challenge = response.get_client_data().expect("oops").challenge;
+
         let result = response.verify(origin, &challenge);
         assert!(result.is_ok());
         Ok(())

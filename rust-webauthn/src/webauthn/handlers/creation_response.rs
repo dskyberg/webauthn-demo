@@ -2,19 +2,18 @@
 
 use actix_session::Session;
 use actix_web::{web, HttpRequest, HttpResponse};
-use anyhow::Result;
 use base64urlsafedata::Base64UrlSafeData;
 
 use crate::{
     errors::Error,
-    webauthn::model::{PublicKeyCredential, PublicKeyCredentialType},
+    webauthn::model::{CreationPublicKeyCredential, PublicKeyCredentialType},
     DataServices,
 };
 
-pub async fn credential_response(
+pub async fn creation_response(
     session: Session,
     service: web::Data<DataServices>,
-    credential: web::Json<PublicKeyCredential>,
+    credential: web::Json<CreationPublicKeyCredential>,
     _req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
     log::trace!("PublicKeyCredential: {:?}", &credential);
@@ -39,6 +38,8 @@ pub async fn credential_response(
     }
     let challenge = challenge.unwrap();
 
+    log::info!("Session challenge");
+
     let name = session
         .get::<String>("name")
         .map_err(|_| Error::SessionError("Failed to get user name from session".to_string()))?;
@@ -49,12 +50,15 @@ pub async fn credential_response(
     }
     let name = name.unwrap();
 
+    log::info!("Session name");
+
     // ------------ 7.1 RP verification ----------------//
     // Steps 1 - 6 are either performed in javascript before
     // postint.  Start with step 7
 
     // 7.1 Step 7
-    if credential.key_type != PublicKeyCredentialType::PublicKey {
+    if credential.type_ != PublicKeyCredentialType::PublicKey {
+        log::info!("PublicKeyCredentialTyep is bad");
         // Bad type attribute
         return Ok(HttpResponse::BadRequest()
             .json(r#"{ "message": "response type must be 'public-key" }"#));
@@ -62,6 +66,8 @@ pub async fn credential_response(
 
     // Verify the response
     let origin = "http://localhost:3000";
+
+    log::info!("Calling verify");
     let result = credential.response.verify(origin, &challenge);
     if let Err(err) = result {
         match err {
@@ -76,12 +82,13 @@ pub async fn credential_response(
             _ => return Err(err),
         }
     }
+
     let auth_data = result.unwrap();
 
     // The response is valid.
     // Step 22: Verify that the credentialId is not being used
     // The authData is returnef from the verify function
-    let id = Base64UrlSafeData(auth_data.credential_id.clone());
+    let id = Base64UrlSafeData(auth_data.credential_data()?.credential_id);
     let cache_response = service
         .get_credential(&id)
         .await
@@ -92,6 +99,7 @@ pub async fn credential_response(
         return Ok(HttpResponse::Unauthorized().json(r#"{ "message": "credentialId in use" }"#));
     }
     // Save the credential
+
     let _ = service
         .add_credential_for_user(&name, &id, &auth_data.as_credential())
         .await?;

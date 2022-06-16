@@ -194,10 +194,11 @@ class Client {
         const publicKey = Client.preformatGetAssertReq(challenge)
         console.log('ASSERTION CHALLENGE', challenge)
 
-        const credential = await navigator.credentials.get({ publicKey })
-        console.log('ASSERTION RESPONSE', credentialResponse)
-        const credentialResponse = Client.publicKeyCredentialToJSON(credential)
-        return await this.sendWebAuthnResponse('assertion', credentialResponse)
+        const assertion = await navigator.credentials.get({ publicKey })
+        const assertionResponse = Client.publicKeyCredentialToJSON(assertion)
+
+        console.log('ASSERTION RESPONSE', JSON.stringify(assertionResponse))
+        return await this.sendWebAuthnResponse('assertion', assertionResponse)
     }
 
     async logout() {

@@ -1,7 +1,6 @@
-use super::{COSEAlgorithm, PublicKeyCredentialType};
-use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
+use super::{COSEAlgorithm, PublicKeyCredentialType};
 use crate::errors::Error;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -51,7 +50,7 @@ impl PublicKeyCredentialParametersBuilder {
         self
     }
 
-    pub fn build(&self) -> Result<PublicKeyCredentialParameters> {
+    pub fn build(&self) -> Result<PublicKeyCredentialParameters, Error> {
         Ok(PublicKeyCredentialParameters {
             key_type: self.key_type.clone().ok_or_else(|| {
                 Error::BuildError(

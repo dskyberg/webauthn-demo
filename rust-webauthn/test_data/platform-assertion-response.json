@@ -1,0 +1,13 @@
+{
+    "rawId": "oTeslLNEqcgsvllq1YGC3nSn95cxPtk0kNHkvuzrIfBPzRbCdjsM0_g9TpZosytOuXxjJNqcyiD36k2nJQcS9hNqer8-ELtZoSMELS2Z",
+    "response": {
+        "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAA",
+        "signature": "MEYCIQDieWX2z_E5UXJ5pZCN3XZ5EJORCRf8W2yrhpY4E3kN5gIhAOx3VRXvvu8S87SpIEq9rBC8SaGy6pcL11cw4g7G6SOF",
+        "userHandle": "12-Wvb1-gaR8TUjjThfpq3OgxFlapZIGCKY4FBgrVnU",
+        "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiNUNqZUlna1FCZkZsMmRtcFd5ZmYyWnFoQk9rSXBaSTVySmR1aWJFSHFNZyIsIm9yaWdpbiI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCIsImNyb3NzT3JpZ2luIjpmYWxzZSwib3RoZXJfa2V5c19jYW5fYmVfYWRkZWRfaGVyZSI6ImRvIG5vdCBjb21wYXJlIGNsaWVudERhdGFKU09OIGFnYWluc3QgYSB0ZW1wbGF0ZS4gU2VlIGh0dHBzOi8vZ29vLmdsL3lhYlBleCJ9"
+    },
+    "authenticatorAttachment": "platform",
+    "getClientExtensionResults": {},
+    "id": "oTeslLNEqcgsvllq1YGC3nSn95cxPtk0kNHkvuzrIfBPzRbCdjsM0_g9TpZosytOuXxjJNqcyiD36k2nJQcS9hNqer8-ELtZoSMELS2Z",
+    "type": "public-key"
+}

@@ -1,4 +1,3 @@
-use anyhow::Result;
 use base64urlsafedata::Base64UrlSafeData;
 use redis::{AsyncCommands, Value};
 
@@ -32,7 +31,7 @@ impl DataServices {
         DataServices { cache }
     }
 
-    pub async fn get_user(&self, user_name: &str) -> Result<Option<UserEntity>> {
+    pub async fn get_user(&self, user_name: &str) -> Result<Option<UserEntity>, Error> {
         log::info!("get_user - getting: {}", user_name);
         let cache_key = format!("{}:{}", USERS_KEY, user_name);
         let mut con = self
@@ -55,19 +54,22 @@ impl DataServices {
             }
             Value::Data(val) => {
                 log::info!("get_user: found {:?}", &val);
-                Ok(serde_json::from_slice(&val)?)
+                Ok(serde_json::from_slice(&val).map_err(Error::SerdeJsonError)?)
             }
-            _ => Err(Error::GeneralError.into()),
+            _ => Err(Error::GeneralError),
         }
     }
 
     /// Create a user
-    pub async fn add_user(&self, user: &UserEntity) -> Result<()> {
+    pub async fn add_user(&self, user: &UserEntity) -> Result<(), Error> {
         let mut con = self.cache.client.get_async_connection().await?;
         let cache_key = format!("{}:{}", USERS_KEY, user.name).to_owned();
         let _: () = redis::pipe()
             .atomic()
-            .set(&cache_key, serde_json::to_vec(&user)?)
+            .set(
+                &cache_key,
+                serde_json::to_vec(&user).map_err(Error::SerdeJsonError)?,
+            )
             .query_async(&mut con)
             .await?;
 
@@ -129,5 +131,28 @@ impl DataServices {
         self.add_user_cred(name, id).await?;
 
         Ok(())
+    }
+
+    pub async fn get_user_credential_id(
+        &self,
+        name: &str,
+    ) -> Result<Option<Base64UrlSafeData>, Error> {
+        let cache_key = format!("{}:{}:{}", USERS_KEY, CREDS_KEY, name).to_owned();
+        let mut con = self.cache.client.get_async_connection().await?;
+
+        let cache_response = con.get(&cache_key).await?;
+
+        match cache_response {
+            Value::Nil => Ok(None),
+            Value::Data(val) => Ok(serde_json::from_slice(&val).map_err(Error::SerdeJsonError)?),
+            _ => Err(Error::GeneralError),
+        }
+    }
+
+    pub async fn get_user_credential(&self, name: &str) -> Result<Option<Credential>, Error> {
+        match self.get_user_credential_id(name).await? {
+            Some(credential_id) => self.get_credential(&credential_id).await,
+            _ => Ok(None),
+        }
     }
 }

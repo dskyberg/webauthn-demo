@@ -1,4 +1,3 @@
-use anyhow::Result;
 use base64urlsafedata::Base64UrlSafeData;
 use serde::{Deserialize, Serialize};
 
@@ -16,7 +15,7 @@ pub struct UserName {
 pub struct UserEntity {
     pub id: Option<Base64UrlSafeData>,
     pub name: String,
-    pub display_name: String,
+    pub display_name: Option<String>,
 }
 
 impl UserEntity {
@@ -24,18 +23,18 @@ impl UserEntity {
         UserEntityBuilder::default()
     }
 
-    pub fn new(name: &str, display_name: &str) -> UserEntity {
+    pub fn new(name: &str, display_name: Option<String>) -> UserEntity {
         UserEntity {
             id: None,
             name: name.to_owned(),
-            display_name: display_name.to_owned(),
+            display_name,
         }
     }
 }
 impl Default for UserEntity {
     fn default() -> Self {
         Self {
-            display_name: "Faky McFakerson".to_owned(),
+            display_name: Some("Faky McFakerson".to_owned()),
             name: "faky.mcfakerson@mail.do".to_owned(),
             id: Some(Base64UrlSafeData(make_id(32).unwrap())),
         }
@@ -70,8 +69,8 @@ impl UserEntityBuilder {
     }
 
     #[allow(non_snake_case)]
-    pub fn with_display_name(&mut self, displayName: &str) -> &mut Self {
-        self.display_name = Some(displayName.to_owned());
+    pub fn with_display_name(&mut self, displayName: &Option<String>) -> &mut Self {
+        self.display_name = displayName.clone();
         self
     }
 
@@ -80,9 +79,9 @@ impl UserEntityBuilder {
         self
     }
 
-    pub fn build(&self) -> Result<UserEntity> {
+    pub fn build(&self) -> Result<UserEntity, Error> {
         if self.name.is_none() || self.display_name.is_none() {
-            return Err(Error::UserEntityBuildError.into());
+            return Err(Error::UserEntityBuildError);
         }
 
         let id = match &self.id {
@@ -93,7 +92,7 @@ impl UserEntityBuilder {
         Ok(UserEntity {
             id,
             name: self.name.as_ref().unwrap().to_owned(),
-            display_name: self.display_name.as_ref().unwrap().to_owned(),
+            display_name: self.display_name.clone(),
         })
     }
 }
@@ -106,7 +105,7 @@ mod tests {
     fn test() {
         let user = UserEntity::builder()
             .with_name("Bob Smith")
-            .with_display_name("bob@email.com")
+            .with_display_name(&Some("bob@email.com".to_owned()))
             .build();
         dbg!(&user);
     }

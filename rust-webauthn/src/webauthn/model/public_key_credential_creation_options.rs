@@ -1,4 +1,3 @@
-use anyhow::Result;
 use base64urlsafedata::Base64UrlSafeData;
 use serde::{Deserialize, Serialize};
 
@@ -36,12 +35,20 @@ impl PublicKeyCredentialCreationOptions {
             authenticator_selection: Some(AuthenticatorSelectionCriteria::default()),
         }
     }
+}
+
+impl Default for PublicKeyCredentialCreationOptions {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl TryFrom<&UserEntity> for PublicKeyCredentialCreationOptions {
+    type Error = Error;
 
     /// Generate default options, using the provided [UserEntity].
-    pub fn from_user_entity(user: &UserEntity) -> Result<Self> {
+    fn try_from(user: &UserEntity) -> Result<Self, Self::Error> {
         let authenticator_selection: AuthenticatorSelectionCriteria = Default::default();
-
-        // Build a user, with an ID, from the provided user.
         let user = UserEntity::builder()
             .with_name(&user.name)
             .with_display_name(&user.display_name)
@@ -59,14 +66,7 @@ impl PublicKeyCredentialCreationOptions {
             .with_pub_key_cred_params(pub_key_cred_params)
             .with_timeout(360000)
             .build()?;
-
         Ok(options)
-    }
-}
-
-impl Default for PublicKeyCredentialCreationOptions {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -132,9 +132,9 @@ impl PublicKeyCredentialCreationOptionsBuilder {
         self
     }
 
-    pub fn build(&self) -> Result<PublicKeyCredentialCreationOptions> {
+    pub fn build(&self) -> Result<PublicKeyCredentialCreationOptions, Error> {
         if self.user.is_none() {
-            return Err(Error::RegistrationChallengResponseBuildError.into());
+            return Err(Error::RegistrationChallengResponseBuildError);
         }
 
         let challenge = match &self.challenge {
@@ -157,16 +157,16 @@ impl PublicKeyCredentialCreationOptionsBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anyhow::Result;
+    use crate::errors::Error;
     use base64urlsafedata::Base64UrlSafeData;
     use serde_json;
 
     #[test]
-    fn test_it() -> Result<()> {
+    fn test_it() -> Result<(), Error> {
         let challenge = PublicKeyCredentialCreationOptions::builder()
             .with_user(
                 UserEntity::builder()
-                    .with_display_name("Bob Smith")
+                    .with_display_name(&Some("Bob Smith".to_owned()))
                     .with_name("bob@email.com")
                     .build()?,
             )
@@ -183,7 +183,7 @@ mod tests {
     }
 
     #[test]
-    fn test_defaults() -> Result<()> {
+    fn test_defaults() -> Result<(), Error> {
         let mut challenge: PublicKeyCredentialCreationOptions = Default::default();
         challenge.user.id = Some(Base64UrlSafeData(make_id(32).unwrap()));
         dbg!(&challenge);
