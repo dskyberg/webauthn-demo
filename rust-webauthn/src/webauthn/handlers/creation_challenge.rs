@@ -11,7 +11,7 @@ pub async fn creation_challenge(
     _req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
     log::info!("Registration Request: {:?}", &request);
-    let config = service.config().await?;
+    let config = service.get_config().await?;
 
     // See if this user already exists.  If so, return 403
     let user = service

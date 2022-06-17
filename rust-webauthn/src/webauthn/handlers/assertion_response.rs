@@ -18,7 +18,7 @@ pub async fn assertion_response(
     _req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
     //log::info!("PublicKeyCredential: {:?}", &credential);
-    let config = service.config().await?;
+    let config = service.get_config().await?;
 
     // Get the challenge and name that was placed in the session
     // by register_challenge_request

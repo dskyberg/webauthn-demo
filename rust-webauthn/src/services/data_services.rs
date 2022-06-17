@@ -10,6 +10,7 @@ use crate::{
 
 const USERS_KEY: &str = "users";
 const CREDS_KEY: &str = "credentials";
+const APP_CONFIG: &str = "appconfig";
 
 // Service wrapper for cache and database
 ///
@@ -32,12 +33,50 @@ impl DataServices {
         DataServices { cache }
     }
 
-    pub async fn config(&self) -> Result<AppConfig, Error> {
-        Ok(AppConfig::default())
+    pub async fn get_config(&self) -> Result<AppConfig, Error> {
+        let cache_key = APP_CONFIG;
+        let mut con = self
+            .cache
+            .client
+            .get_async_connection()
+            .await
+            .map_err(|x| {
+                log::info!("Redist connection failed: {:?}", &x);
+                x
+            })?;
+        let cache_response = con.get(&cache_key).await.map_err(|x| {
+            log::info!("Redis get failed: {:?}", &x);
+            x
+        })?;
+        match cache_response {
+            Value::Nil => {
+                // No config in the cache.  Store the default
+                let config = AppConfig::default();
+                self.update_config(&config).await?;
+                Ok(config)
+            }
+            Value::Data(val) => Ok(serde_json::from_slice(&val).map_err(Error::SerdeJsonError)?),
+            _ => Err(Error::GeneralError),
+        }
+    }
+
+    pub async fn update_config(&self, config: &AppConfig) -> Result<(), Error> {
+        let mut con = self.cache.client.get_async_connection().await?;
+        let cache_key = APP_CONFIG;
+        let _: () = redis::pipe()
+            .atomic()
+            .set(
+                &cache_key,
+                serde_json::to_vec(&config).map_err(Error::SerdeJsonError)?,
+            )
+            .query_async(&mut con)
+            .await?;
+
+        Ok(())
     }
 
     pub async fn get_user(&self, user_name: &str) -> Result<Option<UserEntity>, Error> {
-        log::info!("get_user - getting: {}", user_name);
+        log::trace!("get_user - getting: {}", user_name);
         let cache_key = format!("{}:{}", USERS_KEY, user_name);
         let mut con = self
             .cache

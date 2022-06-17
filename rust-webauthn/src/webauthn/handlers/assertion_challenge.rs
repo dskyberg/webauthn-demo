@@ -10,7 +10,7 @@ pub async fn assertion_challenge(
     _req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
     log::info!("Registration Request: {:?}", &request);
-    let config = service.config().await?;
+    let config = service.get_config().await?;
 
     // Get the user by name.  If not found, return 403
     let user = service
