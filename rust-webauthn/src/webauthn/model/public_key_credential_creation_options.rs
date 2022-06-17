@@ -23,40 +23,41 @@ impl PublicKeyCredentialCreationOptions {
     pub fn builder() -> PublicKeyCredentialCreationOptionsBuilder {
         PublicKeyCredentialCreationOptionsBuilder::default()
     }
+}
 
-    pub fn new() -> Self {
+impl From<&WebauthnPolicy> for PublicKeyCredentialCreationOptions {
+    fn from(policy: &WebauthnPolicy) -> Self {
         Self {
-            rp: RpEntity::default(),
-            user: UserEntity::default(),
+            rp: RpEntity::from(policy),
+            user: UserEntity::from(policy),
             challenge: Base64UrlSafeData(make_id(32).unwrap()),
-            pub_key_cred_params: vec![PublicKeyCredentialParameters::default()],
-            timeout: None,
-            attestation: None, // Some(AttestationConveyancePreference::default()),
-            authenticator_selection: Some(AuthenticatorSelectionCriteria::default()),
+            pub_key_cred_params: vec![PublicKeyCredentialParameters::from(policy)],
+            timeout: Some(policy.timeout),
+            attestation: Some(policy.attestation.clone()),
+            authenticator_selection: Some(AuthenticatorSelectionCriteria::from(policy)),
         }
     }
 }
 
-impl Default for PublicKeyCredentialCreationOptions {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl TryFrom<&UserEntity> for PublicKeyCredentialCreationOptions {
+/// Generate options from policy
+/// Leveages [PublicKeyCredentialCreationOptionsBuilder]
+impl TryFrom<(&WebauthnPolicy, &UserEntity)> for PublicKeyCredentialCreationOptions {
     type Error = Error;
 
     /// Generate default options, using the provided [UserEntity].
-    fn try_from(user: &UserEntity) -> Result<Self, Self::Error> {
-        let authenticator_selection: AuthenticatorSelectionCriteria = Default::default();
+    fn try_from(input: (&WebauthnPolicy, &UserEntity)) -> Result<Self, Self::Error> {
+        let policy = input.0;
+        let user = input.1;
+        let authenticator_selection = AuthenticatorSelectionCriteria::from(policy);
         let user = UserEntity::builder()
             .with_name(&user.name)
             .with_display_name(&user.display_name)
             .build()?;
 
-        let rp: RpEntity = Default::default();
-        let attestation: AttestationConveyancePreference = Default::default();
-        let pub_key_cred_params: PublicKeyCredentialParameters = Default::default();
+        let rp = RpEntity::from(policy);
+        let attestation = policy.attestation.clone();
+        let timeout = policy.timeout;
+        let pub_key_cred_params = PublicKeyCredentialParameters::from(policy);
 
         let options = PublicKeyCredentialCreationOptions::builder()
             .with_user(user)
@@ -64,7 +65,7 @@ impl TryFrom<&UserEntity> for PublicKeyCredentialCreationOptions {
             .with_attestation(attestation)
             .with_authenticator_selection(authenticator_selection)
             .with_pub_key_cred_params(pub_key_cred_params)
-            .with_timeout(360000)
+            .with_timeout(timeout)
             .build()?;
         Ok(options)
     }
@@ -86,6 +87,7 @@ impl Default for PublicKeyCredentialCreationOptionsBuilder {
     }
 }
 
+/// Chainable builder pattern
 impl PublicKeyCredentialCreationOptionsBuilder {
     pub fn new() -> Self {
         Self {
@@ -163,18 +165,20 @@ mod tests {
 
     #[test]
     fn test_it() -> Result<(), Error> {
+        let policy = WebauthnPolicy::default();
+
         let challenge = PublicKeyCredentialCreationOptions::builder()
             .with_user(
                 UserEntity::builder()
-                    .with_display_name(&Some("Bob Smith".to_owned()))
+                    .with_display_name(&Some(policy.default_user_display_name.clone()))
                     .with_name("bob@email.com")
                     .build()?,
             )
-            .with_rp(RpEntity::new("Swankymutt"))
+            .with_rp(RpEntity::from(&policy))
             .with_attestation(AttestationConveyancePreference::Direct)
-            .with_pub_key_cred_params(PublicKeyCredentialParameters::default())
+            .with_pub_key_cred_params(PublicKeyCredentialParameters::from(&policy))
             .with_timeout(360000)
-            .with_authenticator_selection(AuthenticatorSelectionCriteria::default())
+            .with_authenticator_selection(AuthenticatorSelectionCriteria::from(&policy))
             .build()?;
         dbg!(&challenge);
         let result = serde_json::to_string(&challenge).expect("Oops");
@@ -184,7 +188,8 @@ mod tests {
 
     #[test]
     fn test_defaults() -> Result<(), Error> {
-        let mut challenge: PublicKeyCredentialCreationOptions = Default::default();
+        let policy = WebauthnPolicy::default();
+        let mut challenge = PublicKeyCredentialCreationOptions::from(&policy);
         challenge.user.id = Some(Base64UrlSafeData(make_id(32).unwrap()));
         dbg!(&challenge);
         Ok(())

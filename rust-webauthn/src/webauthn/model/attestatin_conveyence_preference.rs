@@ -8,9 +8,3 @@ pub enum AttestationConveyancePreference {
     Direct,
     Enterprise,
 }
-
-impl Default for AttestationConveyancePreference {
-    fn default() -> Self {
-        Self::Direct
-    }
-}

@@ -36,9 +36,3 @@ pub enum COSEAlgorithm {
     A192KW = -4,
     A128KW = -3,
 }
-
-impl Default for COSEAlgorithm {
-    fn default() -> Self {
-        Self::ECDH_ES__HKDF_256
-    }
-}

@@ -10,6 +10,7 @@ pub async fn assertion_challenge(
     _req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
     log::info!("Registration Request: {:?}", &request);
+    let config = service.config().await?;
 
     // Get the user by name.  If not found, return 403
     let user = service
@@ -36,7 +37,8 @@ pub async fn assertion_challenge(
     let credential = credential.unwrap();
 
     // Create the PublicKey Creation Options
-    let pk_options = PublicKeyCredentialRequestOptions::try_from(&credential).map_err(|_| {
+    let pk_options = PublicKeyCredentialRequestOptions::try_from((&config.webauthn, &credential))
+        .map_err(|_| {
         log::info!("Failed to create options from UserEntity");
         Error::InternalServiceError("Failure".to_string())
     })?;

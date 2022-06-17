@@ -7,9 +7,3 @@ pub enum AuthenticatorAttachment {
     #[serde(rename = "cross-platform")]
     CrossPlatform,
 }
-
-impl Default for AuthenticatorAttachment {
-    fn default() -> AuthenticatorAttachment {
-        Self::Platform
-    }
-}

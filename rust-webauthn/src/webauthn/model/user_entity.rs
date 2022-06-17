@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use crate::errors::Error;
 use crate::utils::make_id;
 
+use super::WebauthnPolicy;
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UserName {
@@ -22,21 +24,14 @@ impl UserEntity {
     pub fn builder() -> UserEntityBuilder {
         UserEntityBuilder::default()
     }
-
-    pub fn new(name: &str, display_name: Option<String>) -> UserEntity {
-        UserEntity {
-            id: None,
-            name: name.to_owned(),
-            display_name,
-        }
-    }
 }
-impl Default for UserEntity {
-    fn default() -> Self {
+
+impl From<&WebauthnPolicy> for UserEntity {
+    fn from(policy: &WebauthnPolicy) -> Self {
         Self {
-            display_name: Some("Faky McFakerson".to_owned()),
-            name: "faky.mcfakerson@mail.do".to_owned(),
-            id: Some(Base64UrlSafeData(make_id(32).unwrap())),
+            id: None,
+            name: policy.default_user_name.clone(),
+            display_name: Some(policy.default_user_display_name.clone()),
         }
     }
 }

@@ -21,6 +21,7 @@ pub use resident_key_requirement::*;
 pub use rp_entity::*;
 pub use user_entity::*;
 pub use user_verification_requirement::*;
+pub use webauthn_policy::*;
 
 pub mod attestatin_conveyence_preference;
 pub mod attestation;
@@ -46,3 +47,4 @@ pub mod resident_key_requirement;
 pub mod rp_entity;
 pub mod user_entity;
 pub mod user_verification_requirement;
+pub mod webauthn_policy;

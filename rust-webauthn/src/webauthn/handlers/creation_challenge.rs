@@ -11,6 +11,7 @@ pub async fn creation_challenge(
     _req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
     log::info!("Registration Request: {:?}", &request);
+    let config = service.config().await?;
 
     // See if this user already exists.  If so, return 403
     let user = service
@@ -27,10 +28,11 @@ pub async fn creation_challenge(
     let user = request.into_inner();
 
     // Create the PublicKey Creation Options
-    let pk_options = PublicKeyCredentialCreationOptions::try_from(&user).map_err(|_| {
-        log::info!("Failed to create options from UserEntity");
-        Error::InternalServiceError("Failure".to_string())
-    })?;
+    let pk_options = PublicKeyCredentialCreationOptions::try_from((&config.webauthn, &user))
+        .map_err(|_| {
+            log::info!("Failed to create options from UserEntity");
+            Error::InternalServiceError("Failure".to_string())
+        })?;
 
     // Save the user
     log::info!("Saving user entity: {:?}", &pk_options.user);

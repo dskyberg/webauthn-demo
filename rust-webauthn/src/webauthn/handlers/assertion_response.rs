@@ -18,6 +18,7 @@ pub async fn assertion_response(
     _req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
     //log::info!("PublicKeyCredential: {:?}", &credential);
+    let config = service.config().await?;
 
     // Get the challenge and name that was placed in the session
     // by register_challenge_request
@@ -56,9 +57,10 @@ pub async fn assertion_response(
     let cred = service.get_user_credential(&name).await?.unwrap();
 
     // Verify the response
-    let origin = "http://localhost:3000";
 
-    let result = credential.response.verify(origin, &challenge, &cred);
+    let result = credential
+        .response
+        .verify(&config.webauthn, &challenge, &cred);
     if let Err(err) = result {
         match err {
             Error::BadChallenge => {

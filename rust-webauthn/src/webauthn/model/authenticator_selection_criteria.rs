@@ -25,21 +25,16 @@ impl AuthenticatorSelectionCriteria {
     pub fn builder() -> AuthenticatorSelectionCriteriaBuilder {
         AuthenticatorSelectionCriteriaBuilder::default()
     }
-
-    /// New instance with defaults
-    pub fn new() -> Self {
-        Self {
-            authenticator_attachment: Some(AuthenticatorAttachment::default()),
-            resident_key: Some(ResidentKeyRequirement::default()),
-            require_resident_key: None,
-            user_verification: Some(UserVerificationRequirement::default()),
-        }
-    }
 }
 
-impl Default for AuthenticatorSelectionCriteria {
-    fn default() -> Self {
-        Self::new()
+impl From<&WebauthnPolicy> for AuthenticatorSelectionCriteria {
+    fn from(policy: &WebauthnPolicy) -> Self {
+        Self {
+            authenticator_attachment: Some(policy.authenticator_attachment.clone()),
+            resident_key: Some(policy.resident_key.clone()),
+            require_resident_key: None,
+            user_verification: Some(policy.user_verification.clone()),
+        }
     }
 }
 

@@ -37,17 +37,17 @@ impl AuthenticatorAssertionResponse {
     /// The origin is the RP url, such as "http://localhost:3000"
     pub fn verify(
         &self,
-        origin: &str,
+        policy: &WebauthnPolicy,
         challenge: &Base64UrlSafeData,
         credential: &Credential,
     ) -> Result<(), Error> {
-        self.verify_packed(origin, challenge, credential)
+        self.verify_packed(policy, challenge, credential)
     }
 
     /// Verify the response provided in packed format.
     fn verify_packed(
         &self,
-        origin: &str,
+        policy: &WebauthnPolicy,
         challenge: &Base64UrlSafeData,
         credential: &Credential,
     ) -> Result<(), Error> {
@@ -71,7 +71,7 @@ impl AuthenticatorAssertionResponse {
         }
 
         // 7.2 step 13; Verify the origin
-        if client_data.origin != origin {
+        if client_data.origin != policy.origin {
             return Err(Error::BadOrigin);
         }
 
@@ -83,8 +83,7 @@ impl AuthenticatorAssertionResponse {
         // 7.2 step 15: Verify the rp_id hash
         // If no RP ID is sent by the RP, then the origin domain is used.
         // ( just the domain.  No scheme or port)
-        // TODO: Stop hard coding localhost
-        let rp_id_hash = sha256("localhost".as_bytes());
+        let rp_id_hash = sha256(policy.rp_id.as_bytes());
         let auth_data =
             AuthenticatorData::try_from(self.authenticator_data.as_ref()).map_err(|e| {
                 log::info!("Failed to decode AuthenticatorData");

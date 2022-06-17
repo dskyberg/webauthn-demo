@@ -16,7 +16,8 @@ pub async fn creation_response(
     credential: web::Json<CreationPublicKeyCredential>,
     _req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    log::trace!("PublicKeyCredential: {:?}", &credential);
+    //log::info!("PublicKeyCredential: {:?}", &credential);
+    let config = service.config().await?;
 
     // Get the challenge and name that was placed in the session
     // by register_challenge_request
@@ -64,11 +65,8 @@ pub async fn creation_response(
             .json(r#"{ "message": "response type must be 'public-key" }"#));
     }
 
-    // Verify the response
-    let origin = "http://localhost:3000";
-
     log::info!("Calling verify");
-    let result = credential.response.verify(origin, &challenge);
+    let result = credential.response.verify(&config.webauthn, &challenge);
     if let Err(err) = result {
         match err {
             Error::BadChallenge => {

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{COSEAlgorithm, PublicKeyCredentialType};
+use super::*;
 use crate::errors::Error;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -14,16 +14,14 @@ impl PublicKeyCredentialParameters {
     pub fn builder() -> PublicKeyCredentialParametersBuilder {
         PublicKeyCredentialParametersBuilder::default()
     }
-    pub fn new() -> Self {
-        Self {
-            key_type: PublicKeyCredentialType::PublicKey,
-            alg: COSEAlgorithm::ES256,
-        }
-    }
 }
-impl Default for PublicKeyCredentialParameters {
-    fn default() -> Self {
-        Self::new()
+
+impl From<&WebauthnPolicy> for PublicKeyCredentialParameters {
+    fn from(policy: &WebauthnPolicy) -> Self {
+        Self {
+            key_type: policy.key_type.clone(),
+            alg: policy.alg,
+        }
     }
 }
 

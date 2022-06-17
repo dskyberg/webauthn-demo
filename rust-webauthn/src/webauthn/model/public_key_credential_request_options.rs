@@ -24,13 +24,15 @@ impl PublicKeyCredentialRequestOptions {
     }
 }
 
-impl TryFrom<&Credential> for PublicKeyCredentialRequestOptions {
+impl TryFrom<(&WebauthnPolicy, &Credential)> for PublicKeyCredentialRequestOptions {
     type Error = Error;
-    fn try_from(credential: &Credential) -> Result<Self, Self::Error> {
+    fn try_from(input: (&WebauthnPolicy, &Credential)) -> Result<Self, Self::Error> {
+        let policy = input.0;
+        let credential = input.1;
         let allow_credentials = vec![PublicKeyCredentialDiscriptor::try_from(credential)?];
         PublicKeyCredentialRequestOptions::builder()
             .with_allow_credentials(allow_credentials)
-            .with_user_verification(UserVerificationRequirement::Discouraged)
+            .with_user_verification(policy.user_verification.clone())
             .build()
     }
 }

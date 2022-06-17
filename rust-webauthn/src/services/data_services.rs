@@ -3,6 +3,7 @@ use redis::{AsyncCommands, Value};
 
 use super::Cache;
 use crate::{
+    config::AppConfig,
     errors::Error,
     webauthn::model::{Credential, UserEntity},
 };
@@ -29,6 +30,10 @@ impl DataServices {
     pub async fn create() -> DataServices {
         let cache = Cache::new().await;
         DataServices { cache }
+    }
+
+    pub async fn config(&self) -> Result<AppConfig, Error> {
+        Ok(AppConfig::default())
     }
 
     pub async fn get_user(&self, user_name: &str) -> Result<Option<UserEntity>, Error> {

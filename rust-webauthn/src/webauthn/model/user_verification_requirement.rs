@@ -7,9 +7,3 @@ pub enum UserVerificationRequirement {
     Preferred,
     Required,
 }
-
-impl Default for UserVerificationRequirement {
-    fn default() -> Self {
-        Self::Discouraged
-    }
-}

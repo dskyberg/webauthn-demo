@@ -45,13 +45,13 @@ impl AuthenticatorAttestationResponse {
     /// The origin is the RP url, such as "http://localhost:3000"
     pub fn verify(
         &self,
-        origin: &str,
+        policy: &WebauthnPolicy,
         challenge: &Base64UrlSafeData,
     ) -> Result<AuthenticatorData, Error> {
         log::info!("Verify: start");
         let attestation = self.attestation()?;
         match attestation.fmt {
-            AttestationFormatIdentifier::Packed => self.verify_packed(origin, challenge),
+            AttestationFormatIdentifier::Packed => self.verify_packed(policy, challenge),
             _ => Err(Error::AttestationFormatTypeError),
         }
     }
@@ -59,7 +59,7 @@ impl AuthenticatorAttestationResponse {
     /// Verify the response provided in packed format.
     fn verify_packed(
         &self,
-        origin: &str,
+        policy: &WebauthnPolicy,
         challenge: &Base64UrlSafeData,
     ) -> Result<AuthenticatorData, Error> {
         log::info!("Packed Verify: start");
@@ -77,7 +77,7 @@ impl AuthenticatorAttestationResponse {
         log::info!("Verify: challenge matched");
 
         // Verify the origin
-        if client_data.origin != origin {
+        if client_data.origin != policy.origin {
             return Err(Error::BadOrigin);
         }
         log::info!("Verify: origin matched");
@@ -95,8 +95,8 @@ impl AuthenticatorAttestationResponse {
         // Verify the rp_id hash
         // If no RP ID is sent by the RP, then the origin domain is used.
         // ( just the domain.  No scheme or port)
-        // TODO: Stop hard coding localhost
-        let rp_id_hash = sha256("localhost".as_bytes());
+
+        let rp_id_hash = sha256(policy.rp_id.as_bytes());
         if rp_id_hash != attestation.auth_data.rp_id_hash {
             return Err(Error::AssertionVerificationError(
                 "RP ID Hash does not match".to_string(),
@@ -146,7 +146,7 @@ mod tests {
     #[test]
     fn test_it() -> Result<(), Error> {
         let json = include_str!("../../../test_data/platform-attestation-response.json");
-        let origin = "http://localhost:3000";
+        let policy = WebauthnPolicy::default();
 
         let response: AuthenticatorAttestationResponse =
             serde_json::from_str(json).expect("not yet");
@@ -156,7 +156,7 @@ mod tests {
         // For testing, just grab the one in the response.
         let challenge = response.get_client_data().expect("oops").challenge;
 
-        let result = response.verify(origin, &challenge);
+        let result = response.verify(&policy, &challenge);
         assert!(result.is_ok());
         Ok(())
     }

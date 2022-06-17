@@ -1,5 +1,7 @@
-use crate::errors::Error;
 use serde::{Deserialize, Serialize};
+
+use super::*;
+use crate::errors::Error;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[allow(non_snake_case)]
@@ -25,9 +27,9 @@ impl RpEntity {
     }
 }
 
-impl Default for RpEntity {
-    fn default() -> Self {
-        Self::new("Swankymutt")
+impl From<&WebauthnPolicy> for RpEntity {
+    fn from(policy: &WebauthnPolicy) -> Self {
+        Self::new(policy.rp_name.as_ref())
     }
 }
 

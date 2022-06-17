@@ -13,9 +13,3 @@ pub enum ResidentKeyRequirement {
     Preferred,
     Required,
 }
-
-impl Default for ResidentKeyRequirement {
-    fn default() -> Self {
-        Self::Discouraged
-    }
-}
