@@ -43,6 +43,7 @@ pub async fn creation_challenge(
         .map_err(|_| Error::SessionError("Failed to add user to cache".to_string()))?;
 
     // Update the session for the next step (response).
+    session.clear();
     session
         .insert("name", &user.name)
         .map_err(|_| Error::SessionError("Failed to update name in session".to_string()))?;

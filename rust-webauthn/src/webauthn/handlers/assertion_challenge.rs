@@ -44,6 +44,7 @@ pub async fn assertion_challenge(
     })?;
 
     // Update the session for the next step (response).
+    session.clear();
     session
         .insert("name", &request.name)
         .map_err(|_| Error::SessionError("Failed to update name in session".to_string()))?;
