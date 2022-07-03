@@ -3,8 +3,8 @@
 WebAuthn is a [W3C standard][w3c] that enables web developers to replace passwords in their applications with [FIDO authentication][fido2]. This repository implements a demo built with Rust and React.
 
 
-## Launch Reddis
-The server leverages Reddis to persist assertions and sessions.
+## Launch Redis
+The server leverages Redis to persist assertions and sessions.
 If you have podman installed, use the [services](./server/services.sh) script to launch and manage the container.
 
 ## Run the server
@@ -28,7 +28,7 @@ The client is a React SPA style app, developed with [create-react-app]. The clie
 > npm start
 ```
 
-# Links
+
 [w3c]: https://w3c.github.io/webauthn/
 [fido2]: https://fidoalliance.org/fido2/
 [create-react-app]: https://create-react-app.dev/
