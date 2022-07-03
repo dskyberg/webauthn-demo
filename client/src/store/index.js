@@ -1,5 +1,4 @@
 import { createContext, useContext } from 'react'
-import JournalStore from './JournalStore'
 import SettingsStore from './SettingsStore'
 
 const StoreContext = createContext(null)
@@ -7,7 +6,6 @@ const StoreContext = createContext(null)
 export const StoreProvider = ({ children }) => {
 
     const store = {
-        journal: new JournalStore(),
         settings: new SettingsStore(),
     }
 

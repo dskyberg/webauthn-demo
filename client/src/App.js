@@ -12,15 +12,9 @@ import Home from './components/Home'
 
 const App = observer(() => {
   const { settings } = useStore()
-  const [user, setUser] = useState(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
-  const { isLoggedIn } = settings;
-
-  const login = (user) => {
-    setUser(user)
-    settings.setIsLoggedIn(true)
-  }
+  const { isLoggedIn, user } = settings;
 
   const logout = () => {
     settings.setIsLoggedIn(false)
@@ -39,7 +33,7 @@ const App = observer(() => {
       <TopAppBar onSettingsOpen={handleSettingsOpen} />
       <Container >
         {isLoggedIn ? <User onLogout={logout} user={user} />
-          : <Login onLogin={login} />
+          : <Login />
         }
       </Container>
       <Settings open={settingsOpen} onClose={handleSettingsClose} />
