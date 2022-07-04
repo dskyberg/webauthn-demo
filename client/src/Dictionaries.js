@@ -8,9 +8,9 @@ const Dictionaries = {
    * @link https://www.w3.org/TR/webauthn/#enumdef-userverificationrequirement
    */
   UserVerificationRequirement: {
-    REQUIRED: 'required',
-    PREFERRED: 'preferred',
-    DISCOURAGED: 'discouraged',
+    Required: 'required',
+    Preferred: 'preferred',
+    Discouraged: 'discouraged',
   },
 
   /**
@@ -18,18 +18,18 @@ const Dictionaries = {
    * @link https://www.w3.org/TR/webauthn/#enumdef-authenticatorattachment
    */
   AuthenticatorAttachment: {
-    PLATFORM: 'platform',
-    CROSS_PLATFORM: 'cross-platform',
+    Platform: 'platform',
+    'Cross Plafform': 'cross-platform',
+    'Multi Platform': 'multi-latform',
   },
-
   /**
    * AttestationConveyancePreference
    * @link https://www.w3.org/TR/webauthn/#attestation-convey
    */
   AttestationConveyancePreference: {
-    NONE: 'none',
-    DIRECT: 'direct',
-    INDIRECT: 'indirect',
+    None: 'none',
+    Direct: 'direct',
+    Indirect: 'indirect',
   },
 
   /**
@@ -37,7 +37,7 @@ const Dictionaries = {
    * @link https://www.w3.org/TR/webauthn/#credentialType
    */
   PublicKeyCredentialType: {
-    PUBLIC_KEY: 'public-key',
+    'Public Key': 'public-key',
   },
 
   /**

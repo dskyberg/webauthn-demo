@@ -1,22 +1,15 @@
-/** @jsxImportSource @emotion/react */
-import { css } from '@emotion/react'
-import { Button, Container, Stack, Typography } from "@mui/material";
+import { Button, Container, VStack } from "@chakra-ui/react";
 
-const styles = {
-    button: css`
-    width: 300px;
-    `,
-}
 export default function Home(props) {
     const { onLogin, onRegister } = props
 
     return (
         <Container>
-            <Stack alignItems="center" spacing={2}>
-                <Typography variant="h1">WebAuthn Demo</Typography>
-                <Button variant="contained" css={styles.button} >Login</Button>
-                <Button variant="contained" css={styles.button} color="secondary">Register</Button>
-            </Stack>
+            <VStack spacing={2}>
+                <p>WebAuthn Demo</p>
+                <Button variant="outlined"  >Login</Button>
+                <Button colorScheme='blue'>Register</Button>
+            </VStack>
         </Container>
     )
 }

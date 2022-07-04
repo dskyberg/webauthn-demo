@@ -1,19 +1,8 @@
-import { red } from '@mui/material/colors';
-import { createTheme } from '@mui/material/styles';
+import { extendTheme } from "@chakra-ui/react"
 
-// A custom theme for this app
-const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#556cd6',
-        },
-        secondary: {
-            main: '#19857b',
-        },
-        error: {
-            main: red.A400,
-        },
+const theme = extendTheme({
+    fonts: {
+        body: `'Roboto', sans-serif`,
     },
-});
-
-export default theme;
+})
+export default theme

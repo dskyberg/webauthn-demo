@@ -1,38 +1,38 @@
 
-/** @jsxImportSource @emotion/react */
 import React, { useState } from 'react'
-import { css } from '@emotion/react'
 import { useStore } from '../store'
-import Container from '@mui/material/Container'
-import Button from '@mui/material/Button'
-import Snackbar from '@mui/material/Snackbar'
-import Grid from '@mui/material/Grid'
+import { Container, Button, VStack, Input, Text, useToast, FormControl, FormLabel } from '@chakra-ui/react'
 import { checkUser, createCredential, assertCredential } from '../webauthn'
-import Typography from '@mui/material/Typography'
-import TextField from '@mui/material/TextField'
-import Stack from '@mui/material/Stack'
-import Alert from '@mui/material/Alert'
 
 export default function Login(props) {
     const { settings } = useStore()
+    const toast = useToast()
     const [ceremony, setCeremony] = useState('check')
     const [name, setName] = useState('')
     const [displayName, setDisplayName] = useState('')
-    const [alert, setAlert] = useState({ open: false, severity: 'info', message: '' })
 
+    const showToast = (status, message) => {
+        toast({
+            position: 'top',
+            status: status,
+            description: message,
+            isClosable: true,
+        })
+
+    }
     const setError = (message) => {
         console.error(message)
-        setAlert({ open: true, severity: "error", message })
+        showToast('error', message)
     }
 
     const setWarning = (message) => {
         console.warn(message)
-        setAlert({ open: true, severity: "warning", message })
+        showToast('warning', message)
     }
 
     const setSuccess = (message) => {
         console.log(message)
-        setAlert({ open: true, severity: "success", message })
+        showToast('success', message)
     }
 
     const onCheck = () => {
@@ -92,68 +92,49 @@ export default function Login(props) {
         if (reason === 'clickaway') {
             return;
         }
-        setAlert({ open: false, severity: "info", message: '' });
+        //setAlert({ open: false, severity: "info", message: '' });
     };
 
-    const styles = {
-        container: css`margin-top: 2em;`,
-        header_css: css`margin-bottom: 1em;`,
-        textbox_css: css`width: 400px`,
-        button_css: css`width:150px`,
-        col_css: css`padding-left: 2em; padding-right: 2em;`,
-    }
-
     return (
-        <Container css={styles.container}>
-            <Snackbar
-                anchorOrigin={{ vertical: "top", horizontal: "center" }}
-                open={alert.open}
-                autoHideDuration={6000}
-                onClose={handleSnackbarClose}
-            >
-                <Alert onClose={handleSnackbarClose} severity={alert.severity} sx={{ width: '100%' }}>
-                    {alert.message}
-                </Alert>
-            </Snackbar>
-
-            <Stack alignItems="center" spacing={2}>
-                <TextField
-                    css={styles.textbox_css}
-                    required
-                    id="outlined-required"
-                    label="Username"
-                    size="small"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                />
+        <Container>
+            <VStack alignItems="center" spacing={2}>
+                <FormControl id="user-name">
+                    <FormLabel mb='8px'>Username</FormLabel>
+                    <Input
+                        type="text"
+                        placeholder="your.name@email.com"
+                        value={name}
+                        onChange={e => setName(e.target.value)}
+                    />
+                </FormControl>
                 {(displayName !== '' || ceremony === 'register') &&
-                    <TextField
-                        css={styles.textbox_css}
-                        disabled={ceremony !== 'register'}
-                        required
-                        id="outlined-required"
-                        label="Display Name"
-                        size="small"
-                        value={displayName}
-                        onChange={e => setDisplayName(e.target.value)}
-                    />}
+                    <FormControl id="display-name">
+                        <FormLabel >Display Name</FormLabel>
+                        <Input
+                            placeholder="Your Name"
+                            disabled={ceremony !== 'register'}
+                            id="outlined-required"
+                            value={displayName}
+                            onChange={e => setDisplayName(e.target.value)}
+                        />
+                    </FormControl>
+                }
                 {ceremony === 'check' &&
-                    <Button css={styles.button_css} variant="contained" onClick={onCheck}>
+                    <Button variant="solid" colorScheme="teal" bgGradient="linear(to-r, teal.400, teal.500, teal.600)" onClick={onCheck}>
                         Check for credentials
                     </Button>
                 }
                 {ceremony === 'register' &&
-                    <Button css={styles.button_css} variant="contained" onClick={onRegister}>
+                    <Button variant="solid" colorScheme="teal" bgGradient="linear(to-r, teal.400, teal.500, teal.600)" onClick={onRegister}>
                         Register
                     </Button>
                 }
                 {ceremony === 'authn' &&
-                    <Button css={styles.button_css} variant="contained" onClick={onLogin}>
+                    <Button variant="solid" colorScheme="teal" bgGradient="linear(to-r, teal.400, teal.500, teal.600)" onClick={onLogin}>
                         Login
                     </Button>
                 }
-            </Stack>
-
-        </Container >
+            </VStack>
+        </Container>
     )
 }

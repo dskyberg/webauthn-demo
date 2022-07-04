@@ -1,13 +1,8 @@
-/** @jsxImportSource @emotion/react */
 import React, { useState, useEffect } from 'react';
-import { css } from '@emotion/react'
 
-import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
+import { Center, Container, Text, Box, Grid, GridItem, List, ListItem } from '@chakra-ui/react';
+
 import { checkUser, getUserCredentials } from '../webauthn';
-import AuthenticatorCard from './AuthenticatorCard';
-import { PropaneSharp } from '@mui/icons-material';
 
 export default function User(props) {
   const [authenticators, setAuthenticators] = useState([])
@@ -35,40 +30,76 @@ export default function User(props) {
     props.onLogout()
   }
 
-  const styles = {
-    heading: css`
-      margin: 1.2em;
-      padding-top: 1.2em;
-      padding-bottom: 1.2em;`,
-  }
+  const showPublicKey = () => (
+    <Box m="2.0rm">
+      <Text
+        fontSize={{ base: '16px', lg: '18px' }}
+        color={'yellow.500'}
+        fontWeight={'500'}
+        textTransform={'uppercase'}
+        mb={'2'}
+      >Public Key</Text>
+      <Grid templateColumns='repeat(5, 1fr)' spacing={2}>
+        <GridItem><Text as={'span'} fontWeight={'bold'} mr="1.2rem">Algorithm</Text></GridItem>
+        <GridItem colSpan={4}><Text>{credentials.credential_public_key.alg}</Text></GridItem>
+        <GridItem><Text as={'span'} fontWeight={'bold'} mr="1.2rem">Key</Text> </GridItem>
+        <GridItem colSpan={4}><Text>{credentials.credential_public_key.bytes}</Text></GridItem>
+      </Grid>
+    </Box>
 
-  const doCredentials = () => {
-    return <React.Fragment>
-      <Typography css={styles.heading} variant="subtitle">Credential</Typography>
-      <Typography variant="body2">Type: {credentials.type}</Typography>
-      <Typography variant="body2">AAGUID: {credentials.aaguid}</Typography>
-      <Typography variant="body2">ID: {credentials.id}</Typography>
-      <Typography variant="body2">{credentials.id}</Typography>
-    </React.Fragment>
+  )
 
-  }
+  const doCredentials = () => (
+    <Box m="2.0rm">
+      <Text
+        fontSize={{ base: '16px', lg: '18px' }}
+        color={'yellow.500'}
+        fontWeight={'500'}
+        textTransform={'uppercase'}
+        mb={'2'}
+      >Credential</Text>
+      <Grid templateColumns='repeat(5, 1fr)' spacing={2}>
+        <GridItem><Text as={'span'} fontWeight={'bold'} mr="1.2rem">Type</Text></GridItem>
+        <GridItem colSpan={4}><Text>{credentials.type}</Text></GridItem>
+        <GridItem><Text as={'span'} fontWeight={'bold'} mr="1.2rem">AAGUID:</Text> </GridItem>
+        <GridItem colSpan={4}><Text>{credentials.aaguid}</Text></GridItem>
+        <GridItem><Text as={'span'} fontWeight={'bold'} mr="1.2rem">ID:</Text></GridItem>
+        <GridItem colSpan={4}><Text>{credentials.id}</Text></GridItem>
+        <GridItem><Text as={'span'} fontWeight={'bold'} mr="1.2rem">Algorithm</Text></GridItem>
+        <GridItem colSpan={4}><Text>{credentials.credential_public_key.alg}</Text></GridItem>
+        <GridItem><Text as={'span'} fontWeight={'bold'} mr="1.2rem">Key</Text> </GridItem>
+        <GridItem colSpan={4}><Text>{credentials.credential_public_key.bytes}</Text></GridItem>
+      </Grid>
+    </Box>
+  )
+
 
   return (
-    <Container maxWidth="sm">
-      <Typography css={styles.heading} variant="subtitle">User</Typography>
-      <Typography variant="body2">Name {user.name}</Typography>
-      <Typography variant="body2">Display Name: {user.displayName}</Typography>
-      <Typography variant="body2">ID: {user.id}</Typography>
-      {
-        credentials !== null && doCredentials()
-      }
-    </Container >
+    <Center>
+      <Container m="2rem" maxWidth="800">
+        <Box mb="2rem">
+          <Text
+            fontSize={{ base: '16px', lg: '18px' }}
+            color={'yellow.500'}
+            fontWeight={'500'}
+            textTransform={'uppercase'}
+            mb={'2'}
+          >User</Text>
+          <Grid templateColumns='repeat(5, 1fr)' spacing={2}>
+            <GridItem><Text as={'span'} fontWeight={'bold'} mr="1.2rem">Name </Text></GridItem>
+            <GridItem colSpan={4}> <Text as={'span'} >{user.name}</Text></GridItem>
+
+            <GridItem><Text as={'span'} fontWeight={'bold'} mr="1.2rem">Display Name </Text></GridItem>
+            <GridItem colSpan={4}><Text as={'span'} >{user.displayName}</Text></GridItem>
+
+            <GridItem><Text as={'span'} fontWeight={'bold'} mr="1.2rem">ID </Text></GridItem>
+            <GridItem colSpan={4}><Text as={'span'} >{user.id}</Text></GridItem>
+          </Grid>
+        </Box>
+        {
+          credentials !== null && doCredentials()
+        }
+      </Container >
+    </Center >
   )
 }
-/*
-      <Typography variant="h6">Your authenticators:</Typography>
-      <Button variant="primary" onClick={logout}>Log Out</Button>
-      {
-        authenticators.map(authenticator => <AuthenticatorCard key={authenticator.credID} authenticator={authenticator} />)
-      }
-*/

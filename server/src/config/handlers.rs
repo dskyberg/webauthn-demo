@@ -5,6 +5,7 @@ use crate::{errors, webauthn::model::WebauthnPolicyBuilder, DataServices};
 
 pub async fn get_policy(service: web::Data<DataServices>) -> Result<HttpResponse, errors::Error> {
     let config: AppConfig = service.get_config().await?;
+    log::info!("Sending policy: {:?}", &config);
 
     Ok(HttpResponse::Ok().json(&config.webauthn))
 }
