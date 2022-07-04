@@ -6,4 +6,6 @@ pub enum AuthenticatorAttachment {
     Platform,
     #[serde(rename = "cross-platform")]
     CrossPlatform,
+    #[serde(rename = "multi-platform")]
+    MultiPlatform,
 }

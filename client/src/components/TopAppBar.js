@@ -1,14 +1,12 @@
 import * as React from 'react';
 import { useStore } from '../store'
 
-import AppBar from '@mui/material/AppBar';
-import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
-import SettingsIcon from '@mui/icons-material/Settings'
+import { Flex, Spacer, Button, Text } from '@chakra-ui/react';
+
+import { TbSettings } from 'react-icons/tb'
+
+import DrawerButton from './DrawerButton'
+import SettingsButton from './SettingsButton'
 
 export default function TopAppBar(props) {
     const { settings } = useStore()
@@ -27,35 +25,27 @@ export default function TopAppBar(props) {
     const doLogin = () => (<Button color="inherit" onClick={handleLogin}>Sign In</Button>)
     const doLogout = () => (<Button color="inherit" onClick={handleLogout}>Sign Out</Button>)
 
-    return <Box sx={{ flexGrow: 1 }}>
-        <AppBar position="static">
-            <Toolbar>
-                <IconButton
-                    size="large"
-                    edge="start"
-                    color="inherit"
-                    aria-label="menu"
-                    sx={{ mr: 2 }}
-                >
-                    <MenuIcon />
-                </IconButton>
-                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                    WebAuthn Demo
-                </Typography>
-                {!isLoggedIn && doLogin()}
-                {isLoggedIn && doLogout()}
-                <IconButton
-                    size="large"
-                    edge="start"
-                    color="inherit"
-                    aria-label="menu"
-                    sx={{ mr: 2 }}
-                    onClick={props.onSettingsOpen}
-                >
-                    <SettingsIcon />
-                </IconButton>
-            </Toolbar>
-        </AppBar>
-    </Box>
+    return <Flex
+        as="header"
+        position="fixed"
+        w="100%"
+        h="50px"
+        alignItems="center"
+        backgroundColor='teal.500'
+    >
+        <DrawerButton color="white" />
+        <Spacer />
+        <Text color="white" fontFamily={'heading'}>WebAuthn Demo</Text>
+        <Spacer />
+        <SettingsButton color="white" onClick={props.onSettingsOpen} />
+    </Flex>
 
 }
+
+/*
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            WebAuthn Demo
+        </Typography>
+        {!isLoggedIn && doLogin()}
+        {isLoggedIn && doLogout()}
+*/

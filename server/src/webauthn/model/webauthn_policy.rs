@@ -5,6 +5,7 @@ use super::*;
 use crate::errors::Error;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WebauthnPolicy {
     pub rp_id: String,
     pub rp_name: String,
