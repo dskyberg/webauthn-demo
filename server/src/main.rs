@@ -1,10 +1,6 @@
-use actix_session::{storage::RedisSessionStore, SessionMiddleware};
-use actix_web::{
-    cookie::{Key, SameSite},
-    middleware, web, App, HttpServer,
-};
-
-use server::{config, services::Cache, webauthn, DataServices};
+use actix_web::{middleware, web, App, HttpServer};
+use dotenv::dotenv;
+use server::{config, webauthn, DataServices};
 
 pub async fn app_state() -> web::Data<DataServices> {
     let services = DataServices::create().await;
@@ -14,11 +10,11 @@ pub async fn app_state() -> web::Data<DataServices> {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    dotenv().ok();
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
-    let secret_key = Key::generate();
     let app_state = app_state().await;
-
     let (api_address, tls_address, ip) = server::get_ip_addresses();
+
     log::info!(
         "\nHTTP is running on {:?}\nHTTPS is running on {:?}\nIP address is {}",
         &api_address,
@@ -26,27 +22,9 @@ async fn main() -> std::io::Result<()> {
         &ip
     );
 
-    let redis_connection_string = Cache::connection();
-
-    let store = RedisSessionStore::new(redis_connection_string)
-        .await
-        .unwrap();
-
     HttpServer::new(move || {
         App::new()
             .app_data(app_state.clone())
-            // cookie session middleware
-            /* .wrap(SessionMiddleware::new(
-                CookieSessionStore::default(),
-                secret_key.clone(),
-            )) */
-            .wrap(
-                SessionMiddleware::builder(store.clone(), secret_key.clone())
-                    .cookie_http_only(false)
-                    .cookie_same_site(SameSite::None)
-                    .build(),
-            )
-            // enable logger - always register Actix Web Logger middleware last
             .wrap(middleware::Logger::default())
             .configure(webauthn::routes)
             .configure(config::routes)

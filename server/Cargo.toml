@@ -27,3 +27,4 @@ cbor-codec = "0.7.1"
 openssl = "0.10.40"
 base64urlsafedata = "0.1.0"
 url = { version = "2.2.2", features = ["serde"] }
+dotenv = "0.15.0"

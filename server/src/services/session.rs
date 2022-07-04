@@ -1,13 +1,18 @@
+//! Session Management
+//!
 //! Since Safari has issues with setting cookies on XHR, we use
 //! our own session management.
 //!
-//! Session stores
+//! This works because the client is configured to copy the X-SESSION
+//! header on XDR calls.
+//!
 use actix_web::HttpRequest;
 use base64urlsafedata::Base64UrlSafeData;
 use std::collections::HashMap;
 
 use crate::{errors::Error, services::DataServices, utils::make_id};
 
+/// This header MUST be managed by the client!!
 const DEFAULT_HEADER_NAME: &str = "x-session";
 
 pub type SessionData = HashMap<String, String>;

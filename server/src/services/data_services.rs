@@ -46,7 +46,7 @@ impl DataServices {
                 x
             })?;
         let cache_response = con.get(&cache_key).await.map_err(|x| {
-            log::info!("Redis get failed: {:?}", &x);
+            log::trace!("Redis get failed: {:?}", &x);
             x
         })?;
         match cache_response {
@@ -54,7 +54,7 @@ impl DataServices {
                 // No config in the cache.  Store the default
                 let config = AppConfig::default();
                 self.put_config(&config).await.map_err(|e| {
-                    log::info!("Failed updating config");
+                    log::trace!("Failed updating config");
                     e
                 })?;
                 Ok(config)

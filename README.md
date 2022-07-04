@@ -1,10 +1,15 @@
 # WebAuthn Demo
+A simple WebAuthn FIDO2 Passkey demo written in Rust and React.  The UI leverage Chakra. 
 
-WebAuthn is a [W3C standard][w3c] that enables web developers to replace passwords in their applications with [FIDO authentication][fido2]. This repository implements a demo built with Rust and React.
+Server persistence is managed via Redis.
 
+WebAuthn is a [W3C standard][w3c] that enables web developers to replace passwords in their applications with [FIDO authentication][fido2]. Passkey is currently supported and tested on both Chrome and Safari.
 
-## Launch Redis
-The server leverages Redis to persist assertions and sessions.
+## Running the Demo
+The demo is comprised of a Rust based server that runs on port 3001, and a React Javascript based client that runs on port 3000.  The demo also uses Redis.  I use Podman to launch the Redis container.  It's easy.  Don't be afraid. 
+
+### Step1: Launch Redis
+The server leverages Redis to persist assertions and sessions. 
 If you have podman installed, use the [services](./server/services.sh) script to launch and manage the container.
 
 ## Run the server

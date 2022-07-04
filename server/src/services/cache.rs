@@ -28,41 +28,50 @@ impl Cache {
         }
     }
 
+    fn format_user() -> String {
+        let mut conn = "".to_string();
+        let username = env::var("REDIS_USER");
+        let password = env::var("REDIS_PASSWORD");
+        if let Ok(user) = username {
+            let _ = write!(conn, "{}", user);
+            if let Ok(pwd) = password {
+                let _ = write!(conn, ":{}", pwd);
+            }
+            let _ = write!(conn, "@");
+        }
+        conn
+    }
+
+    fn format_db() -> String {
+        let mut conn = "".to_string();
+        let database = env::var("REDIS_DATABASE");
+        if let Ok(db) = database {
+            let _ = write!(conn, "/{}", db);
+        }
+        conn
+    }
+
+    fn format_port() -> String {
+        let mut conn = "".to_string();
+
+        if let Ok(port) = env::var("REDIS_PORT") {
+            let _ = write!(conn, ":{}", port);
+        }
+        conn
+    }
     /// The URL format is redis://[<username>][:<password>@]<hostname>[:port][/<db>]
     pub fn connection() -> String {
-        let host = env::var("REDIS_URI").ok(); //.unwrap_or_else(|_| "localhost:6937".to_owned());
-        let scheme = env::var("REDIS_SCHEME").ok(); //.unwrap_or_else(|_| "redis".to_owned());
-        let username = env::var("REDIS_PASSWORD").ok();
-        let password = env::var("REDIS_PASSWORD").ok();
-        let database = env::var("REDIS_DATABASE").ok();
+        let scheme = env::var("REDIS_SCHEME").unwrap_or_else(|_| "redis".to_owned());
+        let host = env::var("REDIS_HOST").unwrap_or_else(|_| "127.0.0.1".to_owned());
+        let conn = format!(
+            "{}://{}{}{}{}",
+            scheme,
+            Self::format_user(),
+            host,
+            Self::format_port(),
+            Self::format_db()
+        );
 
-        let mut conn = "".to_string();
-        if let Some(s) = scheme {
-            conn += &s;
-        } else {
-            conn += "redis";
-        }
-
-        conn += "://";
-
-        if let Some(h) = host {
-            conn += &h;
-        } else {
-            conn += "127.0.0.1";
-        }
-
-        if username.is_some() || password.is_some() || database.is_some() {
-            conn += "?";
-            if username.is_some() {
-                let _ = write!(conn, "username={}", username.unwrap());
-            }
-            if password.is_some() {
-                let _ = write!(conn, "password={}", password.unwrap());
-            }
-            if database.is_some() {
-                let _ = write!(conn, "database={}", database.unwrap());
-            }
-        }
         log::info!("Redis connection string: {}", &conn);
         conn
     }
@@ -71,9 +80,10 @@ impl Cache {
 #[cfg(test)]
 mod tests {
     use super::*;
-
+    use dotenv::dotenv;
     #[test]
     fn test_it() {
+        dotenv().ok();
         let s = Cache::connection();
         dbg!(&s);
     }
