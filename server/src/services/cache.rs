@@ -3,6 +3,7 @@
 use redis::aio::ConnectionManager;
 use redis::Client;
 use std::env;
+use std::fmt::Write as _;
 
 #[derive(Clone)]
 pub struct Cache {
@@ -53,13 +54,13 @@ impl Cache {
         if username.is_some() || password.is_some() || database.is_some() {
             conn += "?";
             if username.is_some() {
-                conn += &format!("username={}", username.unwrap());
+                let _ = write!(conn, "username={}", username.unwrap());
             }
             if password.is_some() {
-                conn += &format!("password={}", password.unwrap());
+                let _ = write!(conn, "password={}", password.unwrap());
             }
             if database.is_some() {
-                conn += &format!("password={}", database.unwrap());
+                let _ = write!(conn, "database={}", database.unwrap());
             }
         }
         log::info!("Redis connection string: {}", &conn);

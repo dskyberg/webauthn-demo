@@ -70,7 +70,7 @@ impl DataServices {
     pub async fn put_config(&self, config: &AppConfig) -> Result<(), Error> {
         let mut con = self.cache.client.get_async_connection().await?;
         let cache_key = APP_CONFIG;
-        let _: () = redis::pipe()
+        redis::pipe()
             .atomic()
             .set(
                 &cache_key,
@@ -125,7 +125,7 @@ impl DataServices {
     pub async fn add_user(&self, user: &UserEntity) -> Result<(), Error> {
         let mut con = self.cache.client.get_async_connection().await?;
         let cache_key = format!("{}:{}", USERS_KEY, user.name).to_owned();
-        let _: () = redis::pipe()
+        redis::pipe()
             .atomic()
             .set(
                 &cache_key,
@@ -141,7 +141,7 @@ impl DataServices {
         let cache_key = format!("{}:{}:{}", USERS_KEY, CREDS_KEY, name).to_owned();
         let mut con = self.cache.client.get_async_connection().await?;
 
-        let _: () = redis::pipe()
+        redis::pipe()
             .atomic()
             .set(
                 &cache_key,
@@ -179,7 +179,7 @@ impl DataServices {
         let mut con = self.cache.client.get_async_connection().await?;
         let cache_key = format!("{}:{}", CREDS_KEY, id).to_owned();
 
-        let _: () = redis::pipe()
+        redis::pipe()
             .atomic()
             .set(
                 &cache_key,
@@ -225,7 +225,7 @@ impl DataServices {
         let cache_key = format!("{}:{}", SESSIONS_KEY, id).to_owned();
         let mut con = self.cache.client.get_async_connection().await?;
 
-        let _: () = redis::pipe()
+        redis::pipe()
             .atomic()
             .set(
                 &cache_key,
