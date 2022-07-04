@@ -4,7 +4,7 @@ use actix_web::{
     middleware, web, App, HttpServer,
 };
 
-use rust_webauthn::{config, services::Cache, webauthn, DataServices};
+use server::{config, services::Cache, webauthn, DataServices};
 
 pub async fn app_state() -> web::Data<DataServices> {
     let services = DataServices::create().await;
@@ -18,7 +18,7 @@ async fn main() -> std::io::Result<()> {
     let secret_key = Key::generate();
     let app_state = app_state().await;
 
-    let (api_address, tls_address, ip) = rust_webauthn::get_ip_addresses();
+    let (api_address, tls_address, ip) = server::get_ip_addresses();
     log::info!(
         "\nHTTP is running on {:?}\nHTTPS is running on {:?}\nIP address is {}",
         &api_address,
@@ -50,7 +50,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .configure(webauthn::routes)
             .configure(config::routes)
-            .default_service(web::to(rust_webauthn::default_handler))
+            .default_service(web::to(server::default_handler))
     })
     .bind(("127.0.0.1", 3001))?
     .run()
