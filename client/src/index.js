@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
 import { ColorModeScript, ChakraProvider } from '@chakra-ui/react';
 
 import theme from './theme';
@@ -10,14 +11,14 @@ import * as serviceWorker from './serviceWorker';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
+  <BrowserRouter>
     <ColorModeScript />
     <ChakraProvider theme={theme}>
       <StoreProvider>
         <App />
       </StoreProvider>
     </ChakraProvider>
-  </React.StrictMode>
+  </BrowserRouter>
 );
 
 // If you want your app to work offline and load faster, you can change

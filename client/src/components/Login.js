@@ -1,10 +1,12 @@
 
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store'
 import { Container, Button, VStack, Input, Text, useToast, FormControl, FormLabel } from '@chakra-ui/react'
 import { checkUser, createCredential, assertCredential } from '../webauthn'
 
 export default function Login(props) {
+    let navigate = useNavigate()
     const { settings } = useStore()
     const toast = useToast()
     const [ceremony, setCeremony] = useState('check')
@@ -81,6 +83,7 @@ export default function Login(props) {
                 if (json_response.status == 'ok') {
                     settings.setUser(name)
                     settings.setIsLoggedIn(true)
+                    navigate("/user", { replace: true })
                 }
 
             }).catch(error => {
@@ -96,8 +99,9 @@ export default function Login(props) {
     };
 
     return (
-        <Container>
-            <VStack alignItems="center" spacing={2}>
+        <Container >
+            <VStack shadow="base"
+                borderWidth="1px" borderBottomRadius={'xl'} bg={'gray.50'} p="10" alignItems="center" spacing={2}>
                 <FormControl id="user-name">
                     <FormLabel mb='8px'>Username</FormLabel>
                     <Input

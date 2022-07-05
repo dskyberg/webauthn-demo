@@ -1,29 +1,37 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from "react-router-dom";
 
 import { Center, Container, Text, Box, Grid, GridItem, List, ListItem } from '@chakra-ui/react';
 
 import { checkUser, getUserCredentials } from '../webauthn';
 
 export default function User(props) {
+  let navigate = useNavigate()
   const [authenticators, setAuthenticators] = useState([])
   const [user, setUser] = useState({ id: '', name: '', displayName: '' })
   const [credentials, setCredentials] = useState(null)
 
   useEffect(() => {
-    console.log('Attempting to fetch: ', props.user)
-    checkUser({ name: props.user })
-      .then(user => {
-        console.log('Found User:', user)
-        setUser(user)
-        return (user)
-      })
-      .then(user => {
-        return getUserCredentials(user)
-      })
-      .then(credentials => {
-        console.log('Got credentials:', credentials)
-        setCredentials(credentials)
-      })
+    if (props.user === undefined || props.user === '') {
+      console.log("User: no user name provided.  Redirecting to /")
+      navigate("/", { replace: true })
+    } else {
+
+      console.log('Attempting to fetch: ', props.user)
+      checkUser({ name: props.user })
+        .then(user => {
+          console.log('Found User:', user)
+          setUser(user)
+          return (user)
+        })
+        .then(user => {
+          return getUserCredentials(user)
+        })
+        .then(credentials => {
+          console.log('Got credentials:', credentials)
+          setCredentials(credentials)
+        })
+    }
   }, [])
 
   const logout = () => {

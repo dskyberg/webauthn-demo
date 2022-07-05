@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { observer } from 'mobx-react-lite'
 import {
     Modal, ModalOverlay, ModalHeader, ModalContent, ModalBody, ModalFooter,
@@ -39,7 +38,7 @@ const Policy = observer((props) => {
 
     return (
         <>
-            {policy.isLoading && loading()}
+            {isLoading && loading()}
             < Modal onClose={handleClose} isOpen={
                 props.open
             } >

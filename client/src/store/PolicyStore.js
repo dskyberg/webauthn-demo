@@ -1,4 +1,4 @@
-import { action, observable, makeAutoObservable, runInAction } from "mobx"
+import { makeAutoObservable, runInAction } from "mobx"
 
 export default class PolicyStore {
 
