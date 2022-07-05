@@ -12,26 +12,26 @@ export default function User(props) {
   const [credentials, setCredentials] = useState(null)
 
   useEffect(() => {
-    if (props.user === undefined || props.user === '') {
-      console.log("User: no user name provided.  Redirecting to /")
-      navigate("/", { replace: true })
-    } else {
-
-      console.log('Attempting to fetch: ', props.user)
-      checkUser({ name: props.user })
-        .then(user => {
-          console.log('Found User:', user)
-          setUser(user)
-          return (user)
-        })
-        .then(user => {
-          return getUserCredentials(user)
-        })
-        .then(credentials => {
-          console.log('Got credentials:', credentials)
-          setCredentials(credentials)
-        })
-    }
+    /*   if (props.user === undefined || props.user === '') {
+         console.log("User: no user name provided.  Redirecting to /")
+         navigate("/", { replace: true })
+       } else {
+   */
+    console.log('Attempting to fetch: ', props.user)
+    checkUser({ name: props.user })
+      .then(user => {
+        console.log('Found User:', user)
+        setUser(user)
+        return (user)
+      })
+      .then(user => {
+        return getUserCredentials(user)
+      })
+      .then(credentials => {
+        console.log('Got credentials:', credentials)
+        setCredentials(credentials)
+      })
+    //  }
   }, [])
 
   const logout = () => {

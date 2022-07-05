@@ -1,23 +1,25 @@
 import * as React from 'react';
+import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store'
-
+import { useAuth } from '../auth'
 import { Flex, Spacer, Button, Text } from '@chakra-ui/react';
 
 import DrawerButton from './DrawerButton'
 import SettingsButton from './SettingsButton'
 
 export default function TopAppBar(props) {
-    const { settings } = useStore()
-
-    const { isLoggedIn } = settings;
+    let navigate = useNavigate();
+    const auth = useAuth()
+    const { user } = auth;
 
     const handleLogout = () => {
         console.log('Logging out')
-        settings.logout()
+        auth.signout()
     }
 
     const handleLogin = () => {
         console.log('Logging in')
+        navigate("/login")
     }
 
     const doLogin = () => (<Button size="sm" color="white" variant='ghost' onClick={handleLogin}>Sign In</Button>)
@@ -35,7 +37,7 @@ export default function TopAppBar(props) {
         <Spacer />
         <Text color="white" fontFamily={'heading'}>WebAuthn Demo</Text>
         <Spacer />
-        {isLoggedIn ? doLogout() : doLogin()}
+        {user !== null ? doLogout() : doLogin()}
         <SettingsButton color="white" onClick={props.onSettingsOpen} />
     </Flex>
 

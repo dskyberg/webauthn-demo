@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 import { useStore } from './store';
 import { observer } from 'mobx-react-lite'
 import { Box, Flex, Stack } from '@chakra-ui/react'
+import { RequireAuth } from './auth'
 import TopAppBar from './components/TopAppBar'
 import Login from './components/Login'
 import User from './components/User'
@@ -32,11 +33,11 @@ const App = observer(() => {
   return (
     <Flex>
       <TopAppBar onSettingsOpen={handleSettingsOpen} />
-      <Box width="100%" as="main" mt="60">
+      <Box width="100%" as="main" mt="20">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/user" element={<User onLogout={logout} user={user} />} />
+          <Route path="/user" element={<RequireAuth><User onLogout={logout} user={user} /></RequireAuth>} />
           <Route path="/users" element={<Users />} />
         </Routes>
       </Box>

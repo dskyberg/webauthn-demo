@@ -5,6 +5,8 @@ import { ColorModeScript, ChakraProvider } from '@chakra-ui/react';
 
 import theme from './theme';
 import { StoreProvider } from './store'
+import { AuthProvider } from './auth'
+
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import * as serviceWorker from './serviceWorker';
@@ -15,7 +17,9 @@ root.render(
     <ColorModeScript />
     <ChakraProvider theme={theme}>
       <StoreProvider>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </StoreProvider>
     </ChakraProvider>
   </BrowserRouter>
