@@ -1,6 +1,7 @@
 //! The AuthenticatorAssertionResponse is sent as a resul of client authentication.
 //!
 use base64urlsafedata::Base64UrlSafeData;
+use chrono::Utc;
 use openssl::sha::sha256;
 use serde::Deserialize;
 
@@ -35,12 +36,13 @@ impl AuthenticatorAssertionResponse {
 
     /// The challenge should be provided from the session.
     /// The origin is the RP url, such as "http://localhost:3000"
+    /// Verify returns the updated credential, so that counters can be tracked appropriately.
     pub fn verify(
         &self,
         policy: &WebauthnPolicy,
         challenge: &Base64UrlSafeData,
         credential: &Credential,
-    ) -> Result<(), Error> {
+    ) -> Result<Credential, Error> {
         self.verify_packed(policy, challenge, credential)
     }
 
@@ -50,7 +52,7 @@ impl AuthenticatorAssertionResponse {
         policy: &WebauthnPolicy,
         challenge: &Base64UrlSafeData,
         credential: &Credential,
-    ) -> Result<(), Error> {
+    ) -> Result<Credential, Error> {
         log::info!("Verify start");
         let client_data = self.get_client_data()?;
 
@@ -111,9 +113,17 @@ impl AuthenticatorAssertionResponse {
         }
 
         // 7.2 step 21; Verify signCount is greater
-        if auth_data.counter <= credential.count {
+        // Note: Passkey changes this behavior by not providing a counter.  Thus,
+        // this should be a matter of policy.
+        let mut new_cred = credential.clone();
+        new_cred.last = Utc::now();
+        if policy.validate_sign_count && auth_data.counter <= credential.counter {
             log::info!("ERROR!!!  Bad signCount {:}", &auth_data.counter);
+            return Err(Error::BadSignCounter);
+        } else {
+            new_cred.counter = auth_data.counter;
         }
+
         let alg = credential.credential_public_key.alg.unwrap();
         let pub_key = credential
             .credential_public_key
@@ -142,7 +152,7 @@ impl AuthenticatorAssertionResponse {
             ));
         }
         log::info!("Signature validated");
-        Ok(())
+        Ok(new_cred)
     }
 }
 

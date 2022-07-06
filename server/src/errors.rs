@@ -5,8 +5,6 @@ use thiserror::Error;
 pub enum Error {
     #[error("Base64UrlSafeData try_from error")]
     Base64UrlSafeDataError,
-    #[error("mongodb error: {0}")]
-    DatabaseError(#[from] mongodb::error::Error),
     #[error("Cache error: {0}")]
     CacheError(#[from] redis::RedisError),
     #[error("{0}")]
@@ -55,6 +53,8 @@ pub enum Error {
     BadChallenge,
     #[error("Origin does not match")]
     BadOrigin,
+    #[error("Bad credential counter")]
+    BadSignCounter,
     #[error("Attribute not found: {0}")]
     AttributeNotFound(String),
     #[error("Bad url: {0}")]

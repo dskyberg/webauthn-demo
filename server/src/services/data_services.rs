@@ -36,27 +36,14 @@ impl DataServices {
 
     pub async fn get_config(&self) -> Result<AppConfig, Error> {
         let cache_key = APP_CONFIG;
-        let mut con = self
-            .cache
-            .client
-            .get_async_connection()
-            .await
-            .map_err(|x| {
-                log::info!("Redist connection failed: {:?}", &x);
-                x
-            })?;
-        let cache_response = con.get(&cache_key).await.map_err(|x| {
-            log::trace!("Redis get failed: {:?}", &x);
-            x
-        })?;
+        let mut con = self.cache.client.get_async_connection().await?;
+        let cache_response = con.get(&cache_key).await?;
+
         match cache_response {
             Value::Nil => {
                 // No config in the cache.  Store the default
                 let config = AppConfig::default();
-                self.put_config(&config).await.map_err(|e| {
-                    log::trace!("Failed updating config");
-                    e
-                })?;
+                self.put_config(&config).await?;
                 Ok(config)
             }
             Value::Data(val) => Ok(serde_json::from_slice(&val).map_err(|e| {
@@ -68,16 +55,10 @@ impl DataServices {
     }
 
     pub async fn put_config(&self, config: &AppConfig) -> Result<(), Error> {
-        let mut con = self.cache.client.get_async_connection().await?;
         let cache_key = APP_CONFIG;
-        redis::pipe()
-            .atomic()
-            .set(
-                &cache_key,
-                serde_json::to_vec(&config).map_err(Error::SerdeJsonError)?,
-            )
-            .query_async(&mut con)
-            .await?;
+        let mut con = self.cache.client.get_async_connection().await?;
+        let data = serde_json::to_vec(&config).map_err(Error::SerdeJsonError)?;
+        con.set(&cache_key, data).await?;
 
         Ok(())
     }
@@ -93,21 +74,9 @@ impl DataServices {
     }
 
     pub async fn get_user(&self, user_name: &str) -> Result<Option<UserEntity>, Error> {
-        log::trace!("get_user - getting: {}", user_name);
         let cache_key = format!("{}:{}", USERS_KEY, user_name);
-        let mut con = self
-            .cache
-            .client
-            .get_async_connection()
-            .await
-            .map_err(|x| {
-                log::info!("Redist connection failed: {:?}", &x);
-                x
-            })?;
-        let cache_response = con.get(&cache_key).await.map_err(|x| {
-            log::info!("Redis get failed: {:?}", &x);
-            x
-        })?;
+        let mut con = self.cache.client.get_async_connection().await?;
+        let cache_response = con.get(&cache_key).await?;
         match cache_response {
             Value::Nil => {
                 log::info!("get_user: not found");
@@ -123,32 +92,19 @@ impl DataServices {
 
     /// Create a user
     pub async fn add_user(&self, user: &UserEntity) -> Result<(), Error> {
+        let cache_key = format!("{}:{}", USERS_KEY, user.name);
         let mut con = self.cache.client.get_async_connection().await?;
-        let cache_key = format!("{}:{}", USERS_KEY, user.name).to_owned();
-        redis::pipe()
-            .atomic()
-            .set(
-                &cache_key,
-                serde_json::to_vec(&user).map_err(Error::SerdeJsonError)?,
-            )
-            .query_async(&mut con)
-            .await?;
+        let data = serde_json::to_vec(&user).map_err(Error::SerdeJsonError)?;
+        con.set(&cache_key, data).await?;
 
         Ok(())
     }
 
     async fn add_user_cred(&self, name: &str, id: &Base64UrlSafeData) -> Result<(), Error> {
-        let cache_key = format!("{}:{}:{}", USERS_KEY, CREDS_KEY, name).to_owned();
+        let cache_key = format!("{}:{}:{}", USERS_KEY, CREDS_KEY, name);
         let mut con = self.cache.client.get_async_connection().await?;
-
-        redis::pipe()
-            .atomic()
-            .set(
-                &cache_key,
-                serde_json::to_vec(id).map_err(Error::SerdeJsonError)?,
-            )
-            .query_async(&mut con)
-            .await?;
+        let data = serde_json::to_vec(id).map_err(Error::SerdeJsonError)?;
+        con.set(&cache_key, data).await?;
         Ok(())
     }
 
@@ -156,10 +112,8 @@ impl DataServices {
         &self,
         id: &Base64UrlSafeData,
     ) -> Result<Option<Credential>, Error> {
-        let cache_key = format!("{}:{}", CREDS_KEY, id).to_owned();
-
+        let cache_key = format!("{}:{}", CREDS_KEY, id);
         let mut con = self.cache.client.get_async_connection().await?;
-
         let cache_response = con.get(&cache_key).await?;
 
         match cache_response {
@@ -176,20 +130,21 @@ impl DataServices {
         id: &Base64UrlSafeData,
         cred: &Credential,
     ) -> Result<(), Error> {
+        let cache_key = format!("{}:{}", CREDS_KEY, id);
         let mut con = self.cache.client.get_async_connection().await?;
-        let cache_key = format!("{}:{}", CREDS_KEY, id).to_owned();
+        let data = serde_json::to_vec(&cred).map_err(Error::SerdeJsonError)?;
+        con.set(&cache_key, data).await?;
 
-        redis::pipe()
-            .atomic()
-            .set(
-                &cache_key,
-                serde_json::to_vec(&cred).map_err(Error::SerdeJsonError)?,
-            )
-            .query_async(&mut con)
-            .await?;
-
-        // Bind the key to the user
         self.add_user_cred(name, id).await?;
+
+        Ok(())
+    }
+
+    pub async fn update_credential(&self, cred: &Credential) -> Result<(), Error> {
+        let cache_key = format!("{}:{}", CREDS_KEY, &cred.id);
+        let mut con = self.cache.client.get_async_connection().await?;
+        let data = serde_json::to_vec(&cred).map_err(Error::SerdeJsonError)?;
+        con.set(&cache_key, data).await?;
 
         Ok(())
     }
@@ -200,7 +155,6 @@ impl DataServices {
     ) -> Result<Option<Base64UrlSafeData>, Error> {
         let cache_key = format!("{}:{}:{}", USERS_KEY, CREDS_KEY, name).to_owned();
         let mut con = self.cache.client.get_async_connection().await?;
-
         let cache_response = con.get(&cache_key).await?;
 
         match cache_response {
@@ -224,23 +178,15 @@ impl DataServices {
     ) -> Result<(), Error> {
         let cache_key = format!("{}:{}", SESSIONS_KEY, id).to_owned();
         let mut con = self.cache.client.get_async_connection().await?;
+        let data = serde_json::to_vec(data).map_err(Error::SerdeJsonError)?;
+        con.set(&cache_key, data).await?;
 
-        redis::pipe()
-            .atomic()
-            .set(
-                &cache_key,
-                serde_json::to_vec(data).map_err(Error::SerdeJsonError)?,
-            )
-            .query_async(&mut con)
-            .await?;
         Ok(())
     }
 
     pub async fn get_session(&self, id: &Base64UrlSafeData) -> Result<Option<SessionData>, Error> {
         let cache_key = format!("{}:{}", SESSIONS_KEY, id).to_owned();
-
         let mut con = self.cache.client.get_async_connection().await?;
-
         let cache_response = con.get(&cache_key).await?;
 
         match cache_response {

@@ -1,4 +1,5 @@
 use base64urlsafedata::Base64UrlSafeData;
+use chrono::Utc;
 use serde_cbor::Value;
 use std::io::Cursor;
 use std::io::Read;
@@ -203,9 +204,11 @@ impl AuthenticatorData {
         Credential {
             id: Base64UrlSafeData(credential_data.credential_id.clone()),
             type_: PublicKeyCredentialType::PublicKey,
-            count: self.counter,
+            counter: self.counter,
             aaguid: credential_data.aaguid,
             credential_public_key: credential_data.credential_public_key,
+            flags: self.flags,
+            last: Utc::now(),
         }
     }
 }

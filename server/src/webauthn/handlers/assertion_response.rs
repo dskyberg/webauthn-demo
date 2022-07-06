@@ -1,4 +1,3 @@
-//use crate::webauthn::model::UserEntity;
 use actix_web::{web, HttpRequest, HttpResponse};
 
 use crate::{
@@ -48,23 +47,26 @@ pub async fn assertion_response(
     let cred = service.get_user_credential(&name).await?.unwrap();
 
     // Verify the response
-
     let result = credential
         .response
         .verify(&config.webauthn, &challenge, &cred);
-    if let Err(err) = result {
-        match err {
+
+    match result {
+        Err(err) => match err {
             Error::BadChallenge => {
                 log::info!("Challenge mismatch");
-                return Ok(HttpResponse::Unauthorized().json(r#"{ "message": "bad challenge" }"#));
+                Ok(HttpResponse::Unauthorized().json(r#"{ "message": "bad challenge" }"#))
             }
             Error::BadOrigin => {
                 log::info!("Origin mismatch");
-                return Ok(HttpResponse::Unauthorized().json(r#"{ "message": "bad origin" }"#));
+                Ok(HttpResponse::Unauthorized().json(r#"{ "message": "bad origin" }"#))
             }
-            _ => return Err(err),
+            _ => Err(err),
+        },
+        Ok(credential) => {
+            // Update the credential so that the counter and date stuff is right.
+            service.update_credential(&credential).await?;
+            Ok(HttpResponse::Ok().json(r#"{"status": "ok"}"#))
         }
     }
-
-    Ok(HttpResponse::Ok().json(r#"{"status": "ok"}"#))
 }

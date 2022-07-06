@@ -44,12 +44,6 @@ impl Session {
         self.entries.insert(key.to_owned(), value.to_owned());
     }
 
-    pub fn to_header(&self) -> (String, String) {
-        let name = DEFAULT_HEADER_NAME.to_owned();
-        let value = self.id.clone().to_string();
-        (name, value)
-    }
-
     pub fn as_b64(&self, name: &str) -> Result<Base64UrlSafeData, Error> {
         // Get the challenge and name that was placed in the session
         // by register_challenge_request
@@ -102,6 +96,13 @@ impl Session {
         Err(Error::SessionNotFound)
     }
 
+    pub fn to_header(&self) -> (String, String) {
+        let name = DEFAULT_HEADER_NAME.to_owned();
+        let value = self.id.clone().to_string();
+        (name, value)
+    }
+
+    /// Use a Session header to retrieve the session from [DataServices]
     pub async fn from_request(
         service: &DataServices,
         request: &HttpRequest,
