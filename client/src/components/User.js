@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 
-import { Center, Container, Text, Box, Grid, GridItem, HStack, Checkbox } from '@chakra-ui/react';
+import { Center, Container, Text, Box, Grid, GridItem, HStack, Badge } from '@chakra-ui/react';
 
 import { checkUser, getUserCredentials } from '../webauthn';
 
@@ -9,6 +9,7 @@ const USER_PRESENT = 1;
 const USER_VERIFIED = 4;
 const ATTESTED_CREDENTIAL_DATA_INCLUDED = 64;
 const EXTENSION_DATA_INCLUDED = 128;
+
 
 export default function User(props) {
   let navigate = useNavigate()
@@ -53,18 +54,22 @@ export default function User(props) {
   }
 
   const showFlags = (flags) => {
-    let userPresent = (flags & USER_PRESENT) > 0
-    let userVerified = (flags & USER_VERIFIED) > 0
-    let acData = (flags & ATTESTED_CREDENTIAL_DATA_INCLUDED) > 0
-    let extData = (flags & EXTENSION_DATA_INCLUDED) > 0
+    const userPresent = (flags & USER_PRESENT) > 0
+    const userVerified = (flags & USER_VERIFIED) > 0
+    const acData = (flags & ATTESTED_CREDENTIAL_DATA_INCLUDED) > 0
+    const extData = (flags & EXTENSION_DATA_INCLUDED) > 0
+    let bits = flags.toString(2)
+    if (flags < 129) {
+      bits = '0' + bits
+    }
 
     return (
       <HStack>
-        <Text>{flags}</Text>
-        <Checkbox readOnly isChecked={userPresent}>User Present</Checkbox>
-        <Checkbox readOnly isChecked={userVerified}>User Verified</Checkbox>
-        <Checkbox readOnly isChecked={acData}>Attested</Checkbox>
-        <Checkbox readOnly isChecked={extData}>Extensions</Checkbox>
+        {userPresent && <Badge colorScheme={'green'}>User Present</Badge>}
+        {userVerified && <Badge colorScheme={'green'}>User Verified</Badge>}
+        {acData && <Badge colorScheme={'teal'}>Attested</Badge>}
+        {extData && <Badge colorScheme={'teal'}>Extensions</Badge>}
+        <Badge>{bits}</Badge>
       </HStack>
     )
   }

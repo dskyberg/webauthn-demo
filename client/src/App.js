@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
-import { useStore } from './store';
+import { useStore } from './store'
+import { useAuth } from './auth'
 import { observer } from 'mobx-react-lite'
 import { Box, Flex, Stack } from '@chakra-ui/react'
 import { RequireAuth } from './auth'
@@ -13,13 +14,14 @@ import Policy from './components/Policy'
 import Footer from './components/Footer'
 
 const App = observer(() => {
+  const auth = useAuth()
   const { settings } = useStore()
   const [settingsOpen, setSettingsOpen] = useState(false)
 
-  const { isLoggedIn, user } = settings;
+  const { isLoggedIn, user } = auth;
 
   const logout = () => {
-    settings.setIsLoggedIn(false)
+    auth.signout()
   }
 
   const handleSettingsClose = () => {

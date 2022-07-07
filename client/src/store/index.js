@@ -1,5 +1,4 @@
 import { createContext, useContext } from 'react'
-import SettingsStore from './SettingsStore'
 import PolicyStore from './PolicyStore'
 
 const StoreContext = createContext(null)
@@ -7,7 +6,6 @@ const StoreContext = createContext(null)
 export const StoreProvider = ({ children }) => {
 
     const store = {
-        settings: new SettingsStore(),
         policy: new PolicyStore(),
     }
 

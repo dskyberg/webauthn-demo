@@ -3,8 +3,9 @@ import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth'
 import { useStore } from '../store'
-import { Container, Button, VStack, Input, Text, useToast, FormControl, FormLabel } from '@chakra-ui/react'
+import { Container, Button, VStack, Input, InputGroup, InputRightElement, IconButton, Text, useToast, FormControl, FormLabel } from '@chakra-ui/react'
 import { checkUser, createCredential, assertCredential } from '../webauthn'
+import { BiCaretRight } from 'react-icons/bi'
 
 export default function Login(props) {
     let navigate = useNavigate();
@@ -19,15 +20,16 @@ export default function Login(props) {
 
     let from = location.state?.from?.pathname || "/";
 
-    const showToast = (status, message) => {
+    const showToast = (status, message, title) => {
         toast({
             position: 'top',
             status: status,
+            title: title,
             description: message,
             isClosable: true,
         })
-
     }
+
     const setError = (message) => {
         console.error(message)
         showToast('error', message)
@@ -50,14 +52,11 @@ export default function Login(props) {
         }
         checkUser({ name }).then(response => {
             if (response === null) {
-                setCeremony('register')
-                setWarning("Looks like a new user.  Let's register")
+                setWarning("The user was not found.  Maybe register?")
 
             } else {
                 setDisplayName(response.displayName)
-                setCeremony('authn')
-                setSuccess(`You're already registered, ${response.displayName}. Try logging in.`)
-
+                onLogin()
             }
         }).catch(error => setError(error.message))
     }
@@ -73,8 +72,9 @@ export default function Login(props) {
         }
 
         createCredential({ name, displayName }).then(response => {
-            setCeremony('authn')
+            setCeremony('check')
             setSuccess('Registration successful. Try logging in.')
+
         }).catch(error => setError(error.message))
     }
 
@@ -87,8 +87,6 @@ export default function Login(props) {
             .then(response => {
                 let json_response = JSON.parse(response)
                 if (json_response.status == 'ok') {
-                    settings.setUser(name)
-                    settings.setIsLoggedIn(true)
                     auth.signin(name, () => {
                         navigate(from, { replace: true });
                     })
@@ -99,15 +97,35 @@ export default function Login(props) {
             })
     }
 
-    const handleSnackbarClose = (event, reason) => {
-        if (reason === 'clickaway') {
-            return;
-        }
-        //setAlert({ open: false, severity: "info", message: '' });
-    };
-    console.log("from: ", from)
-    return (
-        <Container >
+    const handleClickRegister = () => {
+        setCeremony('register')
+    }
+
+    const doCeremonyCheckUser = () => {
+        return (
+            <VStack shadow="base"
+                borderWidth="1px" borderBottomRadius={'xl'} bg={'gray.50'} p="10" alignItems="center" spacing={2}>
+                <FormControl id="user-name">
+                    <FormLabel mb='8px'>Username</FormLabel>
+                    <InputGroup>
+                        <Input
+                            type="text"
+                            placeholder="your.name@email.com"
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                        />
+                        <InputRightElement>
+                            <IconButton onClick={onCheck}>{<BiCaretRight />}</IconButton>
+                        </InputRightElement>
+                    </InputGroup>
+                    <Button variant="link" onClick={handleClickRegister}>Register a new user</Button>
+                </FormControl>
+            </VStack>
+        )
+    }
+
+    const doCeremonyRegister = () => {
+        return (
             <VStack shadow="base"
                 borderWidth="1px" borderBottomRadius={'xl'} bg={'gray.50'} p="10" alignItems="center" spacing={2}>
                 <FormControl id="user-name">
@@ -119,34 +137,28 @@ export default function Login(props) {
                         onChange={e => setName(e.target.value)}
                     />
                 </FormControl>
-                {(displayName !== '' || ceremony === 'register') &&
-                    <FormControl id="display-name">
-                        <FormLabel >Display Name</FormLabel>
-                        <Input
-                            placeholder="Your Name"
-                            disabled={ceremony !== 'register'}
-                            id="outlined-required"
-                            value={displayName}
-                            onChange={e => setDisplayName(e.target.value)}
-                        />
-                    </FormControl>
-                }
-                {ceremony === 'check' &&
-                    <Button variant="solid" colorScheme="teal" bgGradient="linear(to-r, teal.400, teal.500, teal.600)" onClick={onCheck}>
-                        Check for credentials
-                    </Button>
-                }
-                {ceremony === 'register' &&
-                    <Button variant="solid" colorScheme="teal" bgGradient="linear(to-r, teal.400, teal.500, teal.600)" onClick={onRegister}>
-                        Register
-                    </Button>
-                }
-                {ceremony === 'authn' &&
-                    <Button variant="solid" colorScheme="teal" bgGradient="linear(to-r, teal.400, teal.500, teal.600)" onClick={onLogin}>
-                        Login
-                    </Button>
-                }
+                <FormControl id="display-name">
+                    <FormLabel >Display Name</FormLabel>
+                    <Input
+                        placeholder="Your Name"
+                        disabled={ceremony !== 'register'}
+                        id="outlined-required"
+                        value={displayName}
+                        onChange={e => setDisplayName(e.target.value)}
+                    />
+                </FormControl>
+                <Button variant="solid" colorScheme="teal" bgGradient="linear(to-r, teal.400, teal.500, teal.600)" onClick={onRegister}>
+                    Register
+                </Button>
+
             </VStack>
+        )
+    }
+
+    return (
+        <Container >
+            {ceremony === 'check' && doCeremonyCheckUser()}
+            {ceremony === 'register' && doCeremonyRegister()}
         </Container>
     )
 }
