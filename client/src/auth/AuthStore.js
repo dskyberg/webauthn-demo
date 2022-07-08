@@ -1,4 +1,6 @@
 import { makeAutoObservable, runInAction } from "mobx"
+import { assertCredential } from '../webauthn'
+
 import { FaWindows } from "react-icons/fa"
 
 export default class AuthStore {
@@ -12,14 +14,23 @@ export default class AuthStore {
         }
     }
 
-    signin(user, callback = () => { }) {
-        this.setUser(user)
-        callback()
+    signin(name) {
+        return assertCredential({ name })
+            .then(response => {
+                let json_response = JSON.parse(response)
+                if (json_response.status == 'ok') {
+                    console.log('login succeeded', json_response)
+                    this.setUser(name)
+                }
+            }).catch(error => {
+                console.log("Error:", error)
+            })
     }
 
-    signout(callback = () => { }) {
+    signout() {
         this.setUser(null)
-        callback()
+        // In case we want to interact with the auth server in the future
+        return Promise.resolve(null)
     }
 
     setUser(user) {

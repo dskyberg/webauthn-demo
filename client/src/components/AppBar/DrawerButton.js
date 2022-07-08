@@ -2,7 +2,13 @@ import { IconButton } from '@chakra-ui/react';
 import { GoThreeBars } from "react-icons/go";
 
 export default function DrawerButton(props) {
-    const { btnRef, onClick, ...rest } = props
+    const { btnRef, onBtnClicked, ...rest } = props
+
+
+    const handleClick = () => {
+        console.log("IconButton clicked")
+        onBtnClicked()
+    }
     return (
         <IconButton
             ref={btnRef}
@@ -12,7 +18,7 @@ export default function DrawerButton(props) {
             color="current"
             marginLeft="2"
             icon={<GoThreeBars />}
-            onClick={onClick}
+            onClick={handleClick}
             {...rest}
         />
     )
