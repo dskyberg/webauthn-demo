@@ -73,6 +73,25 @@ impl DataServices {
         Ok(config.webauthn)
     }
 
+    pub async fn check_user(&self, user_name: &str) -> Result<bool, Error> {
+        let cache_key = format!("{}:{}", USERS_KEY, user_name);
+        let mut con = self.cache.client.get_async_connection().await?;
+        let cache_response = con.exists(&cache_key).await?;
+        match cache_response {
+            Value::Int(result) => {
+                if result == 1 {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            _ => {
+                log::info!("check_user received unexpected result");
+                Err(Error::GeneralError)
+            }
+        }
+    }
+
     pub async fn get_user(&self, user_name: &str) -> Result<Option<UserEntity>, Error> {
         let cache_key = format!("{}:{}", USERS_KEY, user_name);
         let mut con = self.cache.client.get_async_connection().await?;
