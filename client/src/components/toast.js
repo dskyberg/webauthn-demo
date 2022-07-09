@@ -10,15 +10,15 @@ const showToast = (toast, status, message, title) => {
 
 export const setError = (toast, message) => {
     console.error(message)
-    showToast('error', message)
+    showToast(toast, 'error', message)
 }
 
 export const setWarning = (toast, message) => {
     console.warn(message)
-    showToast('warning', message)
+    showToast(toast, 'warning', message)
 }
 
 export const setSuccess = (toast, message) => {
     console.log(message)
-    showToast('success', message)
+    showToast(toast, 'success', message)
 }

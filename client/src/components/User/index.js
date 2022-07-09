@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Center, Container, Skeleton } from '@chakra-ui/react';
 import { useAuth } from '../../auth'
 
-import { checkUser, getUserCredentials } from '../../webauthn';
+import { getUser, getUserCredentials } from '../../webauthn';
 import UserProfile from './UserProfile'
 import UserCredential from './UserCredential'
 import EmptyUser from './EmptyUser'
@@ -18,7 +18,7 @@ export default function User(props) {
             console.log('User.useEffect: not logged in.')
             return;
         }
-        checkUser({ name: auth.user })
+        getUser({ name: auth.user })
             .then(user => {
                 console.log('Found User:', user)
                 setUser(user)

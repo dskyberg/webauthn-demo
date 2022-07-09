@@ -14,11 +14,8 @@ use crate::webauthn::handlers;
 pub fn routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/webauthn")
-            .service(
-                web::resource("/user")
-                    .route(web::post().to(handlers::get_user))
-                    .route(web::head().to(handlers::check_user)),
-            )
+            //.service(web::resource("/user").route(web::post().to(handlers::get_user)))
+            .service(web::resource("/user/{name}").route(web::head().to(handlers::check_user)))
             .service(
                 web::resource("/user/credentials")
                     .route(web::post().to(handlers::get_user_credentials)),
