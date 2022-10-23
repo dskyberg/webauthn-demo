@@ -71,8 +71,6 @@ To increase server log output run
 ```bash
 > RUST_LOG=trace ./demo server run
 ```
-
-
 Now build and run the client.  Note: unlike the server, the client MUST be built before running for the first time.
 
 ```bash
@@ -82,6 +80,32 @@ Once complete, run:
 
 ```bash
 > ./demo client run
+```
+
+## Stopping the demo
+
+In each tab, just click CTRL-C to stop the client and server
+
+### Stop the services
+
+To stop the containerd services:
+
+```bash
+> ./demo services down
+```
+
+### Clean up service volumes
+
+If you want to get rid of all the volume containers for the services
+
+```bash
+> ./demo volume rm
+```
+
+If you want to get rid of just one volume container,
+
+```bash
+> ./demo volume rm [mongo, redis]
 ```
 
 [w3c]: https://w3c.github.io/webauthn/

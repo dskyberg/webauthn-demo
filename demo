@@ -103,7 +103,7 @@ manage_server() {
     if [ $1 == "build" ]; then
         cd server; cargo build; cd ..;
     elif [ $1 == "run" ]; then
-        cd server; cargo run; 
+        cd server; cargo run;cd ..
     else
         echo "Unknown server command: $1"
     fi
@@ -113,7 +113,7 @@ manage_client() {
     if [ $1 == "build" ]; then
         cd client; npm install; cd ..;
     elif [ $1 == "run" ]; then
-        cd client; npm start; 
+        cd client; npm start;cd ..
     else
         echo "Unknown client command: $1"
     fi
