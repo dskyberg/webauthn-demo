@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react'
 import PolicyStore from './PolicyStore'
+import UsersStore from './UsersStore'
 
 const StoreContext = createContext(null)
 
@@ -7,6 +8,7 @@ export const StoreProvider = ({ children }) => {
 
     const store = {
         policy: new PolicyStore(),
+        users: new UsersStore()
     }
 
     return (

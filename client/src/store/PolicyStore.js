@@ -10,6 +10,7 @@ export default class PolicyStore {
         keyType: '',
         alg: 0,
         authenticatorAttachment: '',
+        authenticatorTransports: [],
         residentKey: '',
         userVerification: '',
         origin: '',
@@ -25,6 +26,7 @@ export default class PolicyStore {
     keyType = ''
     alg = 0
     authenticatorAttachment = ''
+    authenticatorTransports = []
     residentKey = ''
     userVerification = ''
     origin = ''
@@ -98,6 +100,7 @@ export default class PolicyStore {
     }
 
     reset(key) {
+        console.log('Resetting', key)
         this[key] = this.model[key]
     }
 
@@ -108,6 +111,7 @@ export default class PolicyStore {
             this.dirty('keyType') ||
             this.dirty('alg') ||
             this.dirty('authenticatorAttachment') ||
+            this.dirty('authenticatorTransports') ||
             this.dirty('residentKey') ||
             this.dirty('userVerification') ||
             this.dirty('origin') ||
@@ -139,6 +143,10 @@ export default class PolicyStore {
         this.authenticatorAttachment = value
     }
 
+    setAuthenticatorTransports(values) {
+        this.authenticatorTransports = values
+    }
+
     setResidentKey(value) {
         this.residentKey = value
     }
@@ -158,7 +166,7 @@ export default class PolicyStore {
     }
 
     setValidateSignCount(value) {
-        console.log("setValidateSignCount:", value)
+        console.log("validateSignCount:", value)
         this.validateSignCount = value
     }
 
