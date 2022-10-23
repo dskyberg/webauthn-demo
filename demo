@@ -1,0 +1,166 @@
+#!/usr/bin/env bash -f
+LIMA_MACHINE_NAME=default
+DOCKER=''
+DOCKER_COMPOSE=''
+CONTAINER_TYPE=''
+
+##---------------------------------------------------------------
+## Figure out which containerd capability is installed
+## If none, then throw a message on how to proceed.
+##---------------------------------------------------------------
+discover_containerd() {
+    docker_path=`which docker`
+    docker_compose_path=`which docker_compose`
+    lima_path=`which lima`
+
+    if [ -e "$docker_path" ]; then
+        echo "Using Docker: $docker_path"
+        echo
+        CONTAINER_TYPE="docker"
+        DOCKER="$docker_path"
+        if [ -e "$docker_compose_path" ]; then
+            DOCKER_COMPOSE="$docker_compose_path"
+        else
+            "You are using docker, but docker_compose was not found.  Please install it."
+            exit 1
+        fi
+
+    elif [ -e "$lima_path" ]; then
+        echo "Using Lima: $lima_path"
+        echo
+        CONTAINER_TYPE="lima"
+        DOCKER="$lima_path nerdctl"
+        DOCKER_COMPOSE="$lima_path nerdctl compose"
+    else 
+        echo "No container capability.  Install either Docker or Lima."
+        echo "We suggest using Lima.  To install, simply do the following:"
+        echo "--------------------"
+        echo "> brew install lima"
+        echo "--------------------"
+        echo "That's right.  That's all you need to do!  This script does the rest!"
+    fi
+}
+
+##---------------------------------------------------------------
+## If using Lima, make sure the lima virtual guest is running.
+## It is not an error to try to start the service, 
+## even if it's already running.
+##---------------------------------------------------------------
+test_for_lima() {
+    if [ "$CONTAINER_TYPE" == "Lima" ]; then 
+        x=`limactl list --json | jq -r '.status'`
+        if [ $x == "Stopped" ]; then
+            echo 'Starting Lima'
+            limactl start --name="$LIMA_MACHINE_NAME"
+        elif [ $x == 'Running' ]; then
+            echo 'Lima is running'
+        else
+            echo 'Lima: Unexpected status'
+            echo $x
+        fi
+    fi
+}
+
+manage_services() {
+    discover_containerd
+    test_for_lima
+
+    if [ $1 == 'up' ]; then
+        services_up
+    elif [ $1 == 'down' ]; then
+        services_down
+    else 
+        echo "unknown services command: $1"
+    fi
+}
+
+manage_volumes() {
+    if [ "$1" == "ls" ]; then
+        $DOCKER volume ls -q
+    elif [ "$1" == 'rm' ]; then
+        if [ $# == 1 ]; then 
+            echo 'Removing all volumes'
+
+            for volume in $($DOCKER volume ls -q)
+            do
+                $DOCKER volume rm $volume
+            done
+        else
+            $DOCKER volume rm $2
+        fi
+    fi
+}
+
+services_up() {
+    $DOCKER_COMPOSE up -d
+}
+
+services_down() {
+    $DOCKER_COMPOSE down
+}
+
+manage_server() {
+    if [ $1 == "build" ]; then
+        cd server; cargo build; cd ..;
+    elif [ $1 == "run" ]; then
+        cd server; cargo run; 
+    else
+        echo "Unknown server command: $1"
+    fi
+}
+
+manage_client() {
+    if [ $1 == "build" ]; then
+        cd client; npm install; cd ..;
+    elif [ $1 == "run" ]; then
+        cd client; npm start; 
+    else
+        echo "Unknown client command: $1"
+    fi
+}
+
+show_help() {
+    echo "Demo script"
+    echo "    build -> Build the server and client"
+    echo "    server [build, run] -> Manage the server"
+    echo "    client [build, run] -> Manage the client" 
+    echo "    services [up, down] -> Manage the data services"
+    echo "    volume [ls, rm <volumn>] -> Manage volumes"
+    echo "    help -> Show this message"
+    echo
+    echo "Quick start guide - perform the following in order:"
+    echo "> ./demo services up"
+    echo "> ./demo server build"
+    echo "> ./demo server run"
+    echo "In a separate tab, run..."
+    echo "> ./demo client build"
+    echo "> ./demo client run"
+    exit 0
+
+}
+
+if [ $# == 0  ]; then 
+    show_help
+fi
+
+
+if [ $1 == "help"  ]; then 
+    show_help
+fi
+
+
+if [ $1 == "services" ]; then
+    shift
+    manage_services $@
+elif [ $1 == 'server' ]; then
+    shift
+    manage_server
+elif [ $1 == 'client' ]; then
+    shift
+    manage_client
+elif [ $1 == 'volume' ]; then
+    shift
+    manage_volumes $@
+else
+    echo "Unknown command: $1"
+fi
