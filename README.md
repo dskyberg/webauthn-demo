@@ -84,7 +84,8 @@ Once complete, run:
 
 ## Stopping the demo
 
-In each tab, just click CTRL-C to stop the client and server
+### Stop the client and server
+In each terminal window, just click CTRL-C to stop the client and server.
 
 ### Stop the services
 
