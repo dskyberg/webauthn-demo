@@ -4,7 +4,7 @@ import { useAuth } from '../auth'
 import { Container, HStack, Button, VStack, Input, InputGroup, InputRightElement, IconButton, useToast, FormControl, FormLabel } from '@chakra-ui/react'
 import { checkUser } from '../webauthn'
 import { BiCaretRight } from 'react-icons/bi'
-import { setWarning, setError } from './toast'
+import { setWarning, setError } from '../components/toast'
 
 export default function Login(props) {
     let navigate = useNavigate();
@@ -23,7 +23,7 @@ export default function Login(props) {
             return
         }
         checkUser({ name }).then(response => {
-            if (response === null) {
+            if (response === false) {
                 setWarning(toast, "The user was not found.  Maybe register?")
 
             } else {

@@ -6,10 +6,13 @@ export default function Home(props) {
     let navigate = useNavigate()
     const { onLogin, onRegister } = props
 
-    const handleClick = () => {
-        navigate("/login", { replace: true })
+    const handleRegisterClick = () => {
+        navigate("/register", { replace: true })
     }
 
+    const handleLoginClick = () => {
+        navigate("/login", { replace: true })
+    }
     return (
         <Container maxW={'3xl'}>
             <Center>
@@ -27,10 +30,10 @@ export default function Home(props) {
                         for an introduction.
                     </Text>
                     <HStack spacing={4} >
-                        <Box bg={"gray.100"} p={"1rem"} onClick={handleClick}>
+                        <Box bg={"gray.100"} p={"1rem"} onClick={handleRegisterClick}>
                             <Text>Start your journey by registering to create a WebAuthn Credential.</Text>
                         </Box>
-                        <Box bg={"gray.100"} p={"1rem"} onClick={handleClick}>
+                        <Box bg={"gray.100"} p={"1rem"} onClick={handleLoginClick}>
                             <Text>Continue your journey by authenticating with your credential.</Text>
                         </Box>
                     </HStack>

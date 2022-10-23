@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Container, Button, VStack, Input, useToast, FormControl, FormLabel } from '@chakra-ui/react'
 import { createCredential } from '../webauthn'
-import { setSuccess, setWarning, setError } from './toast'
+import { setSuccess, setWarning, setError } from '../components/toast'
 
 export default function Login(props) {
     let navigate = useNavigate();

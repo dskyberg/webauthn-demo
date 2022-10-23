@@ -1,14 +1,15 @@
 import * as React from 'react';
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { observer } from 'mobx-react-lite'
 import { useAuth } from '../../auth'
 import { Flex, Spacer, Button, IconButton, Text, Menu, MenuItem, MenuList, MenuButton } from '@chakra-ui/react';
 
 import DrawerButton from './DrawerButton'
-import SettingsButton from './SettingsButton'
 import { CgProfile } from 'react-icons/cg'
+import { HiHome } from 'react-icons/hi'
 
 const AppBar = observer((props) => {
+    let location = useLocation();
     let navigate = useNavigate();
     const { drawerBtnRef, onDrawerBtnClick } = props
     const auth = useAuth()
@@ -21,10 +22,12 @@ const AppBar = observer((props) => {
     }
 
     const handleLogin = () => {
-        console.log('Logging in')
         navigate("/login")
     }
 
+    const handleHomeClicked = () => {
+        navigate('/')
+    }
 
     const doLogin = () => (
         <Button size="sm" color="white" variant='ghost' onClick={handleLogin}>Sign In</Button>
@@ -46,7 +49,6 @@ const AppBar = observer((props) => {
         )
     }
 
-
     return <Flex
         as="header"
         position="fixed"
@@ -56,11 +58,20 @@ const AppBar = observer((props) => {
         backgroundColor='teal.500'
     >
         <DrawerButton btnRef={drawerBtnRef} color="white" onBtnClicked={onDrawerBtnClick} />
+        {location.pathname !== '/' && <IconButton
+            size="sm"
+            fontSize="lg"
+            variant="ghost"
+            color="white"
+            marginLeft="2"
+            icon={<HiHome />}
+            onClick={handleHomeClicked}
+        />
+        }
         <Spacer />
         <Text color="white" fontFamily={'heading'}>WebAuthn Demo</Text>
         <Spacer />
         {isLoggedIn ? doLogout() : doLogin()}
-        <SettingsButton color="white" onClick={props.onSettingsOpen} />
     </Flex>
 
 })

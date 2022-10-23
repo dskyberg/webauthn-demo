@@ -6,11 +6,11 @@ import { Box, Flex, useDisclosure } from '@chakra-ui/react'
 import { RequireAuth } from './auth'
 import AppBar from './components/AppBar'
 import AppDrawer from './components/AppDrawer'
-import Login from './components/Login'
-import Register from './components/Register'
 import User from './components/User'
-import Home from './components/Home'
-import Users from './components/Users'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import Home from './pages/Home'
+import Users from './pages/Users'
 import Policy from './components/Policy'
 
 const App = observer(() => {
@@ -44,8 +44,8 @@ const App = observer(() => {
           <Route path="/users" element={<Users />} />
         </Routes>
       </Box>
+      <AppDrawer onSettingsOpen={handleSettingsOpen} btnRef={drawerBtnRef} isOpen={isOpen} onClose={onClose} />
       <Policy open={settingsOpen} onClose={handleSettingsClose} />
-      <AppDrawer btnRef={drawerBtnRef} isOpen={isOpen} onClose={onClose} />
     </Flex >
   );
 })

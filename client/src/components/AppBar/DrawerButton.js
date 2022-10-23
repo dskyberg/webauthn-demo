@@ -6,9 +6,9 @@ export default function DrawerButton(props) {
 
 
     const handleClick = () => {
-        console.log("IconButton clicked")
         onBtnClicked()
     }
+
     return (
         <IconButton
             ref={btnRef}
