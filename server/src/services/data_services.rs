@@ -68,9 +68,47 @@ impl DataServices {
         policy: WebauthnPolicyBuilder,
     ) -> Result<WebauthnPolicy, Error> {
         let mut config = self.get_config().await?;
+        log::info!("Patch set: {:?}", &policy);
         config.webauthn.update(policy)?;
+        log::info!("Updated policy: {:?}", &config);
         self.put_config(&config).await?;
         Ok(config.webauthn)
+    }
+
+    pub async fn get_users(&self) -> Result<Option<Vec<UserEntity>>, Error> {
+        let mut con = self.cache.client.get_async_connection().await?;
+        let cache_response = con.keys(USERS_KEY).await?;
+        match cache_response {
+            Value::Nil => {
+                log::info!("get_users: no users found");
+                Ok(None)
+            }
+            Value::Data(val) => {
+                log::info!("get_user: found {:?}", &val);
+                Ok(serde_json::from_slice(&val).map_err(Error::SerdeJsonError)?)
+            }
+            Value::Bulk(b) => {
+                log::info!("get_users: bulk: {:?}", &b);
+                let mut values: Vec<UserEntity> = Vec::new();
+                for value in b {
+                    match value {
+                        Value::Data(bytes) => {
+                            let v: UserEntity =
+                                serde_json::from_slice(&bytes).map_err(Error::SerdeJsonError)?;
+                            values.push(v);
+                        }
+                        _ => {
+                            return Err(Error::GeneralError);
+                        }
+                    }
+                }
+                Ok(Some(values))
+            }
+            _ => {
+                log::info!("get_users: unknown Value: {:?}", &cache_response);
+                Err(Error::GeneralError)
+            }
+        }
     }
 
     pub async fn check_user(&self, user_name: &str) -> Result<bool, Error> {

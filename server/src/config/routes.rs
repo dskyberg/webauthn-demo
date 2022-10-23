@@ -10,5 +10,6 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
         web::resource("/policy")
             .route(web::get().to(handlers::get_policy))
             .route(web::patch().to(handlers::patch_policy)),
-    );
+    )
+    .service(web::resource("/users").route(web::get().to(handlers::get_users)));
 }
