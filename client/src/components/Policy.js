@@ -3,7 +3,7 @@ import {
     Modal, ModalOverlay, ModalHeader, ModalContent, ModalBody, ModalFooter,
     FormControl, FormLabel, Input, Button, Radio, RadioGroup,
     CheckboxGroup, Checkbox, Stack, useCheckboxGroup,
-    IconButton, Text, Flex, Spacer, InputGroup, InputLeftElement, Tooltip
+    IconButton, Text, Flex, Spacer, InputGroup, InputLeftElement, InputRightElement, Tooltip
 } from '@chakra-ui/react'
 import { FaRedoAlt } from "react-icons/fa"
 
@@ -21,11 +21,12 @@ const Policy = observer((props) => {
     }
 
     const handleUpdate = () => {
+        console.log("Updating policy")
+        policy.patch()
         props.onClose()
     }
 
     const handleReset = () => {
-        console.log('Resetting')
         policy.loadModel()
     }
 
@@ -96,13 +97,20 @@ const Policy = observer((props) => {
                             isDirty={policy.dirty('timeout')}
                             reset={handleFieldReset}
                         />
-                        <FormControl mt="1.2rem">
-                            <Checkbox value={policy.validateSignCount} onChange={event => policy.setValidateSignCount(event.target.checked)}>Check Sign Count</Checkbox>
-                        </FormControl>
+                        <ManagedCheckbox
+                            isChecked={policy.validateSignCount}
+                            onChange={event => policy.setValidateSignCount(event.target.checked)}
+                            label="Check Sign Count"
+                            id="validateSignCount"
+                            tooltip="Validation will fail if the count does not increment. Uncheck for passkey."
+                            isDirty={policy.dirty('validateSignCount')}
+                            reset={handleFieldReset}
+
+                        />
                         <ManagedRadios
                             label="User Verification"
                             id="userVerification"
-                            tooltip="Whether the authenticator should verify the user"
+                            tooltip="Whether the authenticator should verify the user. Cannot require for passkey."
                             value={policy.userVerification}
                             values={Dictionaries.UserVerificationRequirement}
                             onChange={policy.setUserVerification}
@@ -149,8 +157,23 @@ const Policy = observer((props) => {
 })
 export default Policy
 
+function ManagedCheckbox(props) {
+    const { id, label, tooltip, isDirty, reset, ...rest } = props
+    return (
+        <FormControl mt="1.2rem">
+            <Tooltip label={tooltip}>
+                <Stack direction="row">
+                    {isDirty && <FaRedoAlt id={id} onClick={reset} />}
+                    <Checkbox {...rest}>{label}</Checkbox>
+                </Stack>
+            </Tooltip>
+        </FormControl>
+    )
+}
+
+
 function ManagedCheckboxes(props) {
-    const { label, values, tooltip } = props
+    const { label, values, tooltip, onChange } = props
     const { value, getCheckboxProps } = useCheckboxGroup()
 
     return (
@@ -158,7 +181,7 @@ function ManagedCheckboxes(props) {
             <Tooltip label={tooltip}>
                 <FormLabel>{label}</FormLabel>
             </Tooltip>
-            <CheckboxGroup colorScheme='green' value={value}>
+            <CheckboxGroup colorScheme='green' value={value} onChange={event => console.log("ManagedCheckbox:", event)}>
                 <Stack spacing={[1, 5]} direction={['column', 'row']}>
                     {
                         Object.entries(values).map(([key, val]) =>
