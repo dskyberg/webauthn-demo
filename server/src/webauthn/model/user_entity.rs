@@ -13,7 +13,7 @@ pub struct UserName {
 }
 */
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct UserEntity {
     pub id: Option<Base64UrlSafeData>,

@@ -15,7 +15,7 @@ use super::*;
 /// - CREDENTIAL ID: LENGTH
 /// - CREDENTIAL PUBLIC KEY: (remaining) COSE_Key
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CredentialData {
     pub aaguid: [u8; 16],
     pub credential_id: Vec<u8>,
@@ -82,7 +82,7 @@ impl TryFrom<&[u8]> for CredentialData {
 /// - FLAGS: 1
 /// - COUNTER: 4 (big endian)
 /// - attestedCredentialData
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthenticatorData {
     pub rp_id_hash: [u8; 32],
     pub flags: u8,

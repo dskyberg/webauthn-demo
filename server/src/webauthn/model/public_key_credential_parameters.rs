@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::*;
 use crate::errors::Error;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct PublicKeyCredentialParameters {
     #[serde(rename = "type")]
     pub key_type: PublicKeyCredentialType,

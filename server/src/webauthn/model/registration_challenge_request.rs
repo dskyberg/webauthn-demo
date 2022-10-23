@@ -7,7 +7,7 @@
 /// aninteraction strictly between the UserAgent and the Verifier.
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct RegistrationChallengeRequest {
     pub name: String,

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::*;
 use crate::errors::Error;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct AuthenticatorSelectionCriteria {
     #[serde(skip_serializing_if = "Option::is_none")]

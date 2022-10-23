@@ -76,7 +76,7 @@ pub const CURVES_NAMES: [&str; 7] = [
 ];
 
 /// cose-key structure.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct CoseKey {
     /// cose-key encoded bytes.
     pub bytes: Vec<u8>,
@@ -203,7 +203,7 @@ impl CoseKey {
         Ok(())
     }
 
-    pub(in crate) fn encode_key(&self, e: &mut Encoder<Vec<u8>>) -> CoseResult {
+    pub(crate) fn encode_key(&self, e: &mut Encoder<Vec<u8>>) -> CoseResult {
         let kty = *self
             .kty
             .as_ref()
@@ -330,7 +330,7 @@ impl CoseKey {
         }
     }
 
-    pub(in crate) fn decode_key(&mut self, d: &mut Decoder<Cursor<Vec<u8>>>) -> CoseResult {
+    pub(crate) fn decode_key(&mut self, d: &mut Decoder<Cursor<Vec<u8>>>) -> CoseResult {
         let mut label: i32;
         self.labels_found = Vec::new();
         self.used = Vec::new();

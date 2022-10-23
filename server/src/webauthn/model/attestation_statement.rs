@@ -8,7 +8,7 @@ use serde_cbor::Value;
 use super::COSEAlgorithm;
 use crate::errors::Error;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct AttestationStatement {
     pub alg: Option<COSEAlgorithm>,

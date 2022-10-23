@@ -4,7 +4,7 @@ use url::Url;
 use super::*;
 use crate::errors::Error;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct WebauthnPolicy {
     pub rp_id: String,
@@ -32,7 +32,7 @@ impl WebauthnPolicy {
             rp_name: "swankymutt".to_owned(),
             key_type: PublicKeyCredentialType::PublicKey,
             alg: COSEAlgorithm::ES256,
-            authenticator_attachment: AuthenticatorAttachment::Platform,
+            authenticator_attachment: AuthenticatorAttachment::MultiPlatform,
             resident_key: ResidentKeyRequirement::Discouraged,
             user_verification: UserVerificationRequirement::Required,
             origin,
@@ -98,7 +98,8 @@ impl Default for WebauthnPolicy {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct WebauthnPolicyBuilder {
     pub rp_id: Option<String>,
     pub rp_name: Option<String>,
@@ -199,5 +200,36 @@ impl WebauthnPolicyBuilder {
     ) -> Result<(), Error> {
         self.authenticator_transports = Some(authenticator_transports);
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_patch() {
+        let json = r#"{"authenticatorAttachment": "cross-platform"}"#;
+        let builder: WebauthnPolicyBuilder = serde_json::from_str(json).expect("failed");
+        //dbg!(&builder);
+        assert_eq!(
+            &builder,
+            &WebauthnPolicyBuilder {
+                rp_id: None,
+                rp_name: None,
+                key_type: None,
+                alg: None,
+                authenticator_attachment: Some(AuthenticatorAttachment::CrossPlatform),
+                resident_key: None,
+                user_verification: None,
+                origin: None,
+                attestation: None,
+                timeout: None,
+                default_user_display_name: None,
+                default_user_name: None,
+                validate_sign_count: None,
+                authenticator_transports: None,
+            }
+        );
     }
 }

@@ -4,10 +4,10 @@ use super::*;
 use base64urlsafedata::Base64UrlSafeData;
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 pub struct GetClientExtensionResults {}
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct CreationPublicKeyCredential {
     pub id: Base64UrlSafeData,
@@ -18,7 +18,7 @@ pub struct CreationPublicKeyCredential {
     pub type_: PublicKeyCredentialType, // this wil always be "public-key"
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct AssertionPublicKeyCredential {
     pub authenticator_attachment: AuthenticatorAttachment,

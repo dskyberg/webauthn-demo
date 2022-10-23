@@ -5,7 +5,7 @@ use super::*;
 use crate::errors::Error;
 use crate::utils::make_id;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct PublicKeyCredentialRequestOptions {
     pub challenge: Base64UrlSafeData,

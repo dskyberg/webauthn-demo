@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use super::*;
 use crate::errors::Error;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct PublicKeyCredentialDiscriptor {
     #[serde(rename = "type")]

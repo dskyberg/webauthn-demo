@@ -6,7 +6,7 @@ use crate::errors::Error;
 
 use super::{AttestationFormatIdentifier, AttestationStatement, AuthenticatorData};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct AttestationInner {
     pub(crate) fmt: AttestationFormatIdentifier,
@@ -14,7 +14,7 @@ pub(crate) struct AttestationInner {
     pub(crate) auth_data: serde_cbor::Value,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Attestation {
     pub fmt: AttestationFormatIdentifier,
     pub att_stmt: AttestationStatement,

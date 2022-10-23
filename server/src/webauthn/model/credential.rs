@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use super::*;
 use crate::cbor::keys::CoseKey;
 
-#[derive(Deserialize, Serialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct Credential {
     pub id: Base64UrlSafeData,
     #[serde(rename = "type")]
@@ -17,4 +17,3 @@ pub struct Credential {
     pub flags: u8,
     pub last: DateTime<Utc>,
 }
-

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::*;
 use crate::errors::Error;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[allow(non_snake_case)]
 pub struct RpEntity {
     /// The RP ID can only be the "effective domain" of the RP.

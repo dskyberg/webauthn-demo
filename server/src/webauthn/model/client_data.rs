@@ -11,7 +11,7 @@ use url::Url;
 }
 */
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 pub enum ClientDataType {
     #[serde(rename = "webauthn.get")]
     Get,
@@ -19,20 +19,20 @@ pub enum ClientDataType {
     Create,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub enum TokenBindingStatus {
     Present,
     Supported,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 pub struct TokenBinding {
     pub status: TokenBindingStatus,
     pub id: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct ClientData {
     #[serde(rename = "type")]

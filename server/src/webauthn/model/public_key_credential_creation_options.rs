@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use super::*;
 use crate::{errors::Error, utils::make_id};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct PublicKeyCredentialCreationOptions {
     pub rp: RpEntity,
