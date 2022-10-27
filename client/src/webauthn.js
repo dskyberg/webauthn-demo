@@ -7,8 +7,8 @@ const ENDPOINTS = {
         challenge: '/webauthn/assertion/challenge',
         response: '/webauthn/assertion/response'
     },
-    user: '/webauthn/user',
-    credentials: '/webauthn/user/credentials',
+    user: '/api/users',
+    credentials: '/api/credentials/user',
 }
 
 const base64url_encode = (buffer) => {
@@ -151,17 +151,17 @@ export async function assertCredential(data = {}) {
 
 // Get the user associated with the name
 export async function getUser(formBody) {
-    const response = await fetch(ENDPOINTS.user, {
-        method: 'post',
+    let url = `${ENDPOINTS.user}/${formBody.name}`
+    const response = await fetch(url, {
+        method: 'get',
         credentials: 'include',
         headers: {
             'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formBody)
+        }
     })
 
     if (response.status === 404) {
-        console.log('checkUser - not found. Returning null')
+        console.log('getUser - not found. Returning null')
         return null
     }
 
@@ -174,13 +174,13 @@ export async function getUser(formBody) {
 
 // Will return true if the name exists.  Else false
 export async function checkUser(formBody) {
-    const response = await fetch(ENDPOINTS.user, {
+    let url = `${ENDPOINTS.user}/${formBody.name}`
+    const response = await fetch(url, {
         method: 'HEAD',
         credentials: 'include',
         headers: {
             'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formBody)
+        }
     })
 
     if (response.status === 404) {

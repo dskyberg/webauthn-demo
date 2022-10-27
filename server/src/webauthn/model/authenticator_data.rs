@@ -4,7 +4,7 @@ use serde_cbor::Value;
 use std::io::Cursor;
 use std::io::Read;
 
-use crate::cbor::keys::CoseKey;
+use crate::cose::keys::CoseKey;
 use crate::errors::Error;
 
 use super::*;

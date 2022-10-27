@@ -1,5 +1,4 @@
+/// Storage for App policy and configuration settings
+///
 pub use app_config::*;
-pub use routes::routes;
 pub mod app_config;
-pub mod handlers;
-pub mod routes;

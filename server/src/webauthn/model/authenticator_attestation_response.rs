@@ -4,7 +4,7 @@ use base64urlsafedata::Base64UrlSafeData;
 use openssl::sha::sha256;
 use serde::Deserialize;
 
-use crate::{cbor::algs::verify, errors::Error};
+use crate::{cose::algs::verify, errors::Error};
 
 use super::*;
 

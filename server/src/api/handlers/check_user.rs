@@ -1,17 +1,17 @@
+use actix_web::{web, HttpResponse};
+
 use crate::{errors::Error, DataServices};
-use actix_web::{web, HttpRequest, HttpResponse};
 
 pub async fn check_user(
     path: web::Path<(String,)>,
     service: web::Data<DataServices>,
-    _req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
     let (name,) = path.into_inner();
-    log::info!("Check User Request: {}", &name);
+    log::trace!("Check User Request: {}", &name);
 
     // See if this user already exists.  If so, return 403
     let result = service.check_user(&name).await.map_err(|_| {
-        log::info!("Failed getting user: {}", &name);
+        log::trace!("Failed getting user: {}", &name);
         Error::InternalServiceError("Failed getting user".to_string())
     })?;
     if !result {

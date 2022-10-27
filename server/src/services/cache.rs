@@ -1,10 +1,12 @@
 //! Wrapper for Redis cache connections.
 //!
-use redis::aio::ConnectionManager;
-use redis::Client;
+use redis::{aio::ConnectionManager, AsyncCommands, Client, Value};
 use std::env;
 use std::fmt::Write as _;
 
+use crate::{config::AppConfig, errors::Error};
+
+const APP_CONFIG: &str = "appconfig";
 #[derive(Clone)]
 pub struct Cache {
     pub client: Client,
@@ -74,6 +76,42 @@ impl Cache {
 
         log::info!("Redis connection string: {}", &conn);
         conn
+    }
+
+    pub async fn fetch_config(&self) -> Result<AppConfig, Error> {
+        let cache_key = APP_CONFIG;
+        let con_result = self.client.get_async_connection().await;
+        if let Err(err) = con_result {
+            log::info!("Connection error: {}", &err.to_string());
+            return Err(err.into());
+        }
+
+        let mut con = con_result.unwrap();
+
+        let cache_response = con.get(&cache_key).await?;
+
+        match cache_response {
+            Value::Nil => {
+                // No config in the cache.  Store the default
+                let config = AppConfig::default();
+                self.put_config(&config).await?;
+                Ok(config)
+            }
+            Value::Data(val) => Ok(serde_json::from_slice(&val).map_err(|e| {
+                log::info!("Failed to parse policy: {:?}", &e);
+                Error::SerdeJsonError(e)
+            })?),
+            _ => Err(Error::GeneralError),
+        }
+    }
+
+    pub async fn put_config(&self, config: &AppConfig) -> Result<(), Error> {
+        let cache_key = APP_CONFIG;
+        let mut con = self.client.get_async_connection().await?;
+        let data = serde_json::to_vec(&config).map_err(Error::SerdeJsonError)?;
+        con.set(&cache_key, data).await?;
+
+        Ok(())
     }
 }
 

@@ -20,6 +20,7 @@ pub async fn creation_response(
         log::info!("Failed to get session from data service");
         e
     })?;
+
     if session.is_empty() {
         log::info!("Session is invalid.  No entries");
         return Ok(
@@ -59,7 +60,10 @@ pub async fn creation_response(
                 log::info!("Origin mismatch");
                 return Ok(HttpResponse::Unauthorized().json(r#"{ "message": "bad origin" }"#));
             }
-            _ => return Err(err),
+            _ => {
+                log::info!("Challenge: unexpected error: {}", &err.to_string());
+                return Err(err);
+            }
         }
     }
 
@@ -79,10 +83,8 @@ pub async fn creation_response(
         return Ok(HttpResponse::Unauthorized().json(r#"{ "message": "credentialId in use" }"#));
     }
     // Save the credential
-
-    service
-        .add_credential_for_user(&name, &id, &auth_data.as_credential())
-        .await?;
+    let cred = auth_data.as_credential();
+    service.add_credential_for_user(&name, &id, &cred).await?;
 
     Ok(HttpResponse::Ok().json(r#"{"status": "ok"}"#))
 }

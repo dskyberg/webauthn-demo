@@ -1,6 +1,6 @@
 use actix_web::{middleware, web, App, HttpServer};
 use dotenv::dotenv;
-use server::{config, webauthn, DataServices};
+use server::{api, webauthn, DataServices};
 
 pub async fn app_state() -> web::Data<DataServices> {
     let services = DataServices::create().await;
@@ -27,7 +27,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(app_state.clone())
             .wrap(middleware::Logger::default())
             .configure(webauthn::routes)
-            .configure(config::routes)
+            .configure(api::routes)
             .default_service(web::to(server::default_handler))
     })
     .bind(("127.0.0.1", 3001))?

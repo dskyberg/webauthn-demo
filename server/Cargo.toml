@@ -18,7 +18,7 @@ env_logger = "0.9.0"
 get_if_addrs = "0.5.3"
 log = "0.4.17"
 openssl = "0.10.40"
-redis = {version = "0.21.5", features = ["tokio-comp", "connection-manager"]}
+redis = {version = "0.21", features = ["tokio-comp", "connection-manager"]}
 ring = "0.16.20"
 serde = {version = "1.0.137", features = ["derive"] }
 serde_cbor = "0.11.2"
@@ -28,3 +28,5 @@ serde-stuff = { git = "https://github.com/dskyberg/serde-stuff" }
 serde_with = {version = "1.13.0", features = ["base64"] }
 thiserror = "1.0.31"
 url = { version = "2.2.2", features = ["serde"] }
+mongodb = "2.3"
+futures = "0.3.3" 

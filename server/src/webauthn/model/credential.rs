@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use super::*;
-use crate::cbor::keys::CoseKey;
+use crate::cose::keys::CoseKey;
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct Credential {
@@ -16,4 +16,13 @@ pub struct Credential {
     pub credential_public_key: CoseKey,
     pub flags: u8,
     pub last: DateTime<Utc>,
+}
+
+impl Credential {
+    /// Isolating time functions for simplicity
+    pub fn now(&self) -> Self {
+        let mut new = self.clone();
+        new.last = Utc::now();
+        new
+    }
 }

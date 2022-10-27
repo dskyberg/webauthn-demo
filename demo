@@ -75,6 +75,9 @@ manage_services() {
 }
 
 manage_volumes() {
+    discover_containerd
+    test_for_lima
+
     if [ "$1" == "ls" ]; then
         $DOCKER volume ls -q
     elif [ "$1" == 'rm' ]; then
@@ -88,6 +91,8 @@ manage_volumes() {
         else
             $DOCKER volume rm $2
         fi
+    else
+        echo "volume: Unknown command: $1"
     fi
 }
 

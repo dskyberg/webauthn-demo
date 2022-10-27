@@ -1,6 +1,6 @@
-use crate::webauthn::model::UserEntity;
-use crate::{errors::Error, DataServices};
 use actix_web::{web, HttpRequest, HttpResponse};
+
+use crate::{errors::Error, webauthn::model::UserEntity, DataServices};
 
 pub async fn get_user_credentials(
     service: web::Data<DataServices>,

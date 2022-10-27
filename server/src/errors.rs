@@ -1,8 +1,14 @@
-use crate::cbor::errors::CoseError;
+use crate::cose::errors::CoseError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum Error {
+    #[error("mongodb error: {0}")]
+    DatabaseError(#[from] mongodb::error::Error),
+    #[error("could not access field in document: {0}")]
+    MongoDataError(#[from] mongodb::bson::document::ValueAccessError),
+    #[error("Not found")]
+    NotFound,
     #[error("Base64UrlSafeData try_from error")]
     Base64UrlSafeDataError,
     #[error("Cache error: {0}")]
