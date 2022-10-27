@@ -7,7 +7,7 @@ import { RiLoginBoxLine } from 'react-icons/ri'
 
 
 export default function AppDrawer(props) {
-    const { btnRef, isOpen, onClose, onSettingsOpen } = props
+    const { btnRef, isOpen, onClose } = props
     const navigate = useNavigate()
 
     const handleLink = (event) => {
@@ -15,10 +15,6 @@ export default function AppDrawer(props) {
         navigate(`${event.target.id}`)
     }
 
-    const handleSettingsClicked = event => {
-        onClose()
-        onSettingsOpen(event)
-    }
     return (
         <Drawer
             isOpen={isOpen}
@@ -34,7 +30,7 @@ export default function AppDrawer(props) {
                         <Button leftIcon={<HiHome />} id="/" variant="ghost" onClick={handleLink}>Home</Button>
                         <Button leftIcon={<FaRegAddressCard />} id="/register" variant="ghost" onClick={handleLink}>Register</Button>
                         <Button leftIcon={<RiLoginBoxLine />} id="/login" variant="ghost" onClick={handleLink}>Login</Button>
-                        <Button leftIcon={<TbSettings />} variant="ghost" onClick={handleSettingsClicked}>Settings</Button>
+                        <Button leftIcon={<TbSettings />} id="/policy" variant="ghost" onClick={handleLink}>Settings</Button>
                         <Divider />
                         <Button leftIcon={<RiLoginBoxLine />} id="/users" variant="ghost" onClick={handleLink}>Users</Button>
 

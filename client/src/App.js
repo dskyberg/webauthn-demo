@@ -11,7 +11,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Home from './pages/Home'
 import Users from './pages/Users'
-import Policy from './components/Policy'
+import Policy from './pages/Policy'
 
 const App = observer(() => {
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -24,17 +24,10 @@ const App = observer(() => {
     auth.signout()
   }
 
-  const handleSettingsClose = () => {
-    setSettingsOpen(false)
-  }
-
-  const handleSettingsOpen = () => {
-    setSettingsOpen(true)
-  }
 
   return (
     <Flex>
-      <AppBar onSettingsOpen={handleSettingsOpen} drawerBtnRef={drawerBtnRef} onDrawerBtnClick={onOpen} />
+      <AppBar drawerBtnRef={drawerBtnRef} onDrawerBtnClick={onOpen} />
       <Box width="100%" as="main" mt="20">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -42,10 +35,10 @@ const App = observer(() => {
           <Route path="/register" element={<Register />} />
           <Route path="/user" element={<RequireAuth><User onLogout={logout} /></RequireAuth>} />
           <Route path="/users" element={<Users />} />
+          <Route path="/policy" element={<Policy />} />
         </Routes>
       </Box>
-      <AppDrawer onSettingsOpen={handleSettingsOpen} btnRef={drawerBtnRef} isOpen={isOpen} onClose={onClose} />
-      <Policy open={settingsOpen} onClose={handleSettingsClose} />
+      <AppDrawer btnRef={drawerBtnRef} isOpen={isOpen} onClose={onClose} />
     </Flex >
   );
 })
