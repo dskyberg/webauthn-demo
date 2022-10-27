@@ -44,7 +44,7 @@ export default class PolicyStore {
 
     loadModel() {
         this.isLoading = true;
-        fetch('/policy', {
+        fetch('/api/policy', {
             method: 'GET',
             credentials: 'include',
             headers: {
