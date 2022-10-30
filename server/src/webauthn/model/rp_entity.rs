@@ -46,12 +46,12 @@ impl RpEntityBuilder {
         }
     }
 
-    pub fn with_id(&mut self, id: &str) -> &mut Self {
+    pub fn with_id(mut self, id: &str) -> Self {
         self.id = Some(id.to_owned());
         self
     }
 
-    pub fn with_name(&mut self, name: &str) -> &mut Self {
+    pub fn with_name(mut self, name: &str) -> Self {
         self.name = Some(name.to_owned());
         self
     }

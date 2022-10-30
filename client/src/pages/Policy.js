@@ -1,7 +1,7 @@
 import React from 'react'
 import { observer } from 'mobx-react-lite'
 import {
-    Container, Heading, Box,
+    Container, Heading, Spacer, Box,
     FormControl, FormLabel, Input, Button, Radio, RadioGroup,
     CheckboxGroup, Checkbox, Stack, useCheckboxGroup,
     IconButton, Text, Flex, InputGroup, InputLeftElement, Tooltip
@@ -42,104 +42,102 @@ const Policy = observer(() => {
     }
 
     return (
-        <Container>
-            <Stack direction="row">
-                <Stack p={"1.2em"} direction="column" shadow="base">
-                    <ManagedInput
-                        label="RP ID"
-                        id="rpId"
-                        tooltip="The rpID is always the effective domain"
-                        value={policy.rpId}
-                        isDirty={policy.dirty('rpId')}
-                        reset={handleFieldReset}
-                        onChange={event => policy.setRpId(event.target.value)}
-                    />
-                    <ManagedInput
-                        label="RP Name"
-                        id="rpName"
-                        tooltip="The Relying Party name that will be sent"
-                        value={policy.rpName}
-                        onChange={event => policy.setRpName(event.target.value)}
-                        isDirty={policy.dirty('rpName')}
-                        reset={handleFieldReset}
-                    />
-                    <ManagedInput
-                        label="Origin"
-                        id="origin"
-                        tooltip="The Relying Party url"
-                        value={policy.origin}
-                        onChange={event => policy.setOrigin(event.target.value)}
-                        isDirty={policy.dirty('origin')}
-                        reset={handleFieldReset}
-                    />
-                    <ManagedInput
-                        label="Time Out"
-                        id="timeout"
-                        tooltip="A ceremony will time out at this point"
-                        value={policy.timeout}
-                        onChange={event => policy.setTimeout(event.target.value)}
-                        isDirty={policy.dirty('timeout')}
-                        reset={handleFieldReset}
-                    />
-                    <ManagedCheckbox
-                        isChecked={policy.validateSignCount}
-                        onChange={event => policy.setValidateSignCount(event.target.checked)}
-                        label="Check Sign Count"
-                        id="validateSignCount"
-                        tooltip="Validation will fail if the count does not increment. Uncheck for passkey."
-                        isDirty={policy.dirty('validateSignCount')}
-                        reset={handleFieldReset}
+        <Flex direction="row" justifyContent={"center"}>
+            <Stack minWidth={"500px"} direction="column" shadow="base" borderWidth="2px" borderBottomRadius={'xl'} bg={'gray.50'} p="10" spacing={2}>
+                <ManagedInput
+                    label="RP ID"
+                    id="rpId"
+                    tooltip="The rpID is always the effective domain"
+                    value={policy.rpId}
+                    isDirty={policy.dirty('rpId')}
+                    reset={handleFieldReset}
+                    onChange={event => policy.setRpId(event.target.value)}
+                />
+                <ManagedInput
+                    label="RP Name"
+                    id="rpName"
+                    tooltip="The Relying Party name that will be sent"
+                    value={policy.rpName}
+                    onChange={event => policy.setRpName(event.target.value)}
+                    isDirty={policy.dirty('rpName')}
+                    reset={handleFieldReset}
+                />
+                <ManagedInput
+                    label="Origin"
+                    id="origin"
+                    tooltip="The Relying Party url"
+                    value={policy.origin}
+                    onChange={event => policy.setOrigin(event.target.value)}
+                    isDirty={policy.dirty('origin')}
+                    reset={handleFieldReset}
+                />
+                <ManagedInput
+                    label="Time Out"
+                    id="timeout"
+                    tooltip="A ceremony will time out at this point"
+                    value={policy.timeout}
+                    onChange={event => policy.setTimeout(event.target.value)}
+                    isDirty={policy.dirty('timeout')}
+                    reset={handleFieldReset}
+                />
+                <ManagedCheckbox
+                    isChecked={policy.validateSignCount}
+                    onChange={event => policy.setValidateSignCount(event.target.checked)}
+                    label="Check Sign Count"
+                    id="validateSignCount"
+                    tooltip="Validation will fail if the count does not increment. Uncheck for passkey."
+                    isDirty={policy.dirty('validateSignCount')}
+                    reset={handleFieldReset}
 
-                    />
-                    <ManagedRadios
-                        label="User Verification"
-                        id="userVerification"
-                        tooltip="Whether the authenticator should verify the user. Cannot require for passkey."
-                        value={policy.userVerification}
-                        values={Dictionaries.UserVerificationRequirement}
-                        onChange={policy.setUserVerification}
-                        isDirty={policy.dirty('userVerification')}
-                        reset={handleFieldReset}
-                    />
+                />
+                <ManagedRadios
+                    label="User Verification"
+                    id="userVerification"
+                    tooltip="Whether the authenticator should verify the user. Cannot require for passkey."
+                    value={policy.userVerification}
+                    values={Dictionaries.UserVerificationRequirement}
+                    onChange={policy.setUserVerification}
+                    isDirty={policy.dirty('userVerification')}
+                    reset={handleFieldReset}
+                />
 
-                    <ManagedRadios
-                        label="Authenticator Attachment"
-                        id="authenticatorAttachment"
-                        tooltip="Whether the authenticator can be roamable"
-                        value={policy.authenticatorAttachment}
-                        values={Dictionaries.AuthenticatorAttachment}
-                        onChange={policy.setAuthenticatorAttachment}
-                        isDirty={policy.dirty('authenticatorAttachment')}
-                        reset={handleFieldReset}
-                    />
+                <ManagedRadios
+                    label="Authenticator Attachment"
+                    id="authenticatorAttachment"
+                    tooltip="Whether the authenticator can be roamable"
+                    value={policy.authenticatorAttachment}
+                    values={Dictionaries.AuthenticatorAttachment}
+                    onChange={policy.setAuthenticatorAttachment}
+                    isDirty={policy.dirty('authenticatorAttachment')}
+                    reset={handleFieldReset}
+                />
 
-                    <ManagedRadios
-                        label="Attestation Conveyance Preference"
-                        id="attestation"
-                        tooltip="How the authenticator should manage attestations."
-                        value={policy.attestation}
-                        values={Dictionaries.AttestationConveyancePreference}
-                        onChange={policy.setAttestation}
-                        isDirty={policy.dirty('attestation')}
-                        reset={handleFieldReset}
-                    />
-                    <ManagedCheckboxes
-                        tooltip="Not implemented yet"
-                        label="Authenticator Transports"
-                        id="authenticatorTransports"
-                        values={Dictionaries.AuthenticatorTransport}
-                    />
-                    <Stack direction="row">
-                        <Button size="sm" mr="1.2rem" onClick={policy.updateFromModel}>Reset</Button>
-                        <Button size="sm" onClick={handleUpdate} colorScheme="blue">Update</Button>
-                    </Stack>
-                </Stack>
-                <Box m={"1.2em"} p={"1.2em"} />
-                <Stack p={"1.2em"} direction="column" shadow="base">
-                    <Heading as="h4">Templates</Heading>
+                <ManagedRadios
+                    label="Attestation Conveyance Preference"
+                    id="attestation"
+                    tooltip="How the authenticator should manage attestations."
+                    value={policy.attestation}
+                    values={Dictionaries.AttestationConveyancePreference}
+                    onChange={policy.setAttestation}
+                    isDirty={policy.dirty('attestation')}
+                    reset={handleFieldReset}
+                />
+                <ManagedCheckboxes
+                    tooltip="Not implemented yet"
+                    label="Authenticator Transports"
+                    id="authenticatorTransports"
+                    values={Dictionaries.AuthenticatorTransport}
+                />
+                <Stack direction="row">
+                    <Button size="sm" mr="1.2rem" onClick={policy.updateFromModel}>Reset</Button>
+                    <Button size="sm" onClick={handleUpdate} colorScheme="blue">Update</Button>
                 </Stack>
             </Stack>
-        </Container>
+            <Box w={"20px"} />
+            <Stack minWidth={"500px"} direction="column" shadow="base" borderWidth="2px" borderBottomRadius={'xl'} bg={'gray.50'} p="10" spacing={2}>
+                <Heading as="h4">Templates</Heading>
+            </Stack>
+        </Flex>
     )
 })
 export default Policy

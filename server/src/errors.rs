@@ -3,6 +3,8 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum Error {
+    #[error("Service error: {0}")]
+    ServiceError(String),
     #[error("mongodb error: {0}")]
     DatabaseError(#[from] mongodb::error::Error),
     #[error("could not access field in document: {0}")]
@@ -77,6 +79,14 @@ pub enum Error {
     AttestationStatementMissingSig,
     #[error("Bad sig format in AttestationStatement")]
     AttestationStatementBadSigFormat,
+    #[error("Challenge already exists")]
+    ChallengeExists,
+    #[error("Challenge not found")]
+    ChallengeNotFound,
+    #[error("Challenge was already used")]
+    ChallengeUsed,
+    #[error("WebauthnPolicyBuilder cannont have {0} as None")]
+    EmptyWebauthnPolicy(String),
 }
 
 use actix_web::{http::StatusCode, HttpResponse};

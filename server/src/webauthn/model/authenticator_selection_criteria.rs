@@ -55,22 +55,22 @@ impl AuthenticatorSelectionCriteriaBuilder {
         }
     }
     pub fn with_authenticator_attachment(
-        &mut self,
+        mut self,
         authenticator_attachment: AuthenticatorAttachment,
-    ) -> &mut Self {
+    ) -> Self {
         self.authenticator_attachment = Some(authenticator_attachment);
         self
     }
 
-    pub fn with_resident_key(&mut self, resident_key: ResidentKeyRequirement) -> &mut Self {
+    pub fn with_resident_key(mut self, resident_key: ResidentKeyRequirement) -> Self {
         self.resident_key = Some(resident_key);
         self
     }
 
     pub fn with_user_verification(
-        &mut self,
+        mut self,
         user_verification: UserVerificationRequirement,
-    ) -> &mut Self {
+    ) -> Self {
         self.user_verification = Some(user_verification);
         self
     }

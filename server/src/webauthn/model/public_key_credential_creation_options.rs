@@ -24,7 +24,7 @@ impl PublicKeyCredentialCreationOptions {
         PublicKeyCredentialCreationOptionsBuilder::default()
     }
 }
-
+/*
 impl From<&WebauthnPolicy> for PublicKeyCredentialCreationOptions {
     fn from(policy: &WebauthnPolicy) -> Self {
         Self {
@@ -38,34 +38,31 @@ impl From<&WebauthnPolicy> for PublicKeyCredentialCreationOptions {
         }
     }
 }
+*/
 
 /// Generate options from policy
 /// Leveages [PublicKeyCredentialCreationOptionsBuilder]
-impl TryFrom<(&WebauthnPolicy, &UserEntity)> for PublicKeyCredentialCreationOptions {
+impl TryFrom<(&WebauthnPolicy, &UserEntity, &Base64UrlSafeData)>
+    for PublicKeyCredentialCreationOptions
+{
     type Error = Error;
 
     /// Generate default options, using the provided [UserEntity].
-    fn try_from(input: (&WebauthnPolicy, &UserEntity)) -> Result<Self, Self::Error> {
+    fn try_from(
+        input: (&WebauthnPolicy, &UserEntity, &Base64UrlSafeData),
+    ) -> Result<Self, Self::Error> {
         let policy = input.0;
         let user = input.1;
-        let authenticator_selection = AuthenticatorSelectionCriteria::from(policy);
+        let challenge = input.2;
+
         let user = UserEntity::builder()
             .with_name(&user.name)
             .with_display_name(&user.display_name)
             .build()?;
 
-        let rp = RpEntity::from(policy);
-        let attestation = policy.attestation.clone();
-        let timeout = policy.timeout;
-        let pub_key_cred_params = PublicKeyCredentialParameters::from(policy);
-
-        let options = PublicKeyCredentialCreationOptions::builder()
+        let options = PublicKeyCredentialCreationOptionsBuilder::from(policy)
+            .with_challenge(challenge)
             .with_user(user)
-            .with_rp(rp)
-            .with_attestation(attestation)
-            .with_authenticator_selection(authenticator_selection)
-            .with_pub_key_cred_params(pub_key_cred_params)
-            .with_timeout(timeout)
             .build()?;
         Ok(options)
     }
@@ -87,6 +84,24 @@ impl Default for PublicKeyCredentialCreationOptionsBuilder {
     }
 }
 
+/// Build the options builder from WebAuthnPolicy.
+impl From<&WebauthnPolicy> for PublicKeyCredentialCreationOptionsBuilder {
+    fn from(policy: &WebauthnPolicy) -> Self {
+        let rp = RpEntity::from(policy);
+        let pub_key_cred_params = PublicKeyCredentialParameters::from(policy);
+        let attestation = policy.attestation.clone();
+        let timeout = policy.timeout;
+        let authenticator_selection = AuthenticatorSelectionCriteria::from(policy);
+
+        PublicKeyCredentialCreationOptionsBuilder::default()
+            .with_attestation(attestation)
+            .with_timeout(timeout)
+            .with_rp(rp)
+            .with_pub_key_cred_params(pub_key_cred_params)
+            .with_authenticator_selection(authenticator_selection)
+    }
+}
+
 /// Chainable builder pattern
 impl PublicKeyCredentialCreationOptionsBuilder {
     pub fn new() -> Self {
@@ -101,35 +116,36 @@ impl PublicKeyCredentialCreationOptionsBuilder {
         }
     }
 
-    pub fn with_user(&mut self, user: UserEntity) -> &mut Self {
+    pub fn with_challenge(mut self, challenge: &Base64UrlSafeData) -> Self {
+        self.challenge = Some(challenge.clone());
+        self
+    }
+    pub fn with_user(mut self, user: UserEntity) -> Self {
         self.user = Some(user);
         self
     }
 
-    pub fn with_rp(&mut self, rp: RpEntity) -> &mut Self {
+    pub fn with_rp(mut self, rp: RpEntity) -> Self {
         self.rp = Some(rp);
         self
     }
 
-    pub fn with_attestation(&mut self, attestation: AttestationConveyancePreference) -> &mut Self {
+    pub fn with_attestation(mut self, attestation: AttestationConveyancePreference) -> Self {
         self.attestation = Some(attestation);
         self
     }
 
-    pub fn with_authenticator_selection(
-        &mut self,
-        asc: AuthenticatorSelectionCriteria,
-    ) -> &mut Self {
+    pub fn with_authenticator_selection(mut self, asc: AuthenticatorSelectionCriteria) -> Self {
         self.authenticator_selection = Some(asc);
         self
     }
 
-    pub fn with_pub_key_cred_params(&mut self, params: PublicKeyCredentialParameters) -> &mut Self {
+    pub fn with_pub_key_cred_params(mut self, params: PublicKeyCredentialParameters) -> Self {
         self.pub_key_cred_params = Some(vec![params]);
         self
     }
 
-    pub fn with_timeout(&mut self, timeout: usize) -> &mut Self {
+    pub fn with_timeout(mut self, timeout: usize) -> Self {
         self.timeout = Some(timeout);
         self
     }
@@ -153,45 +169,5 @@ impl PublicKeyCredentialCreationOptionsBuilder {
             authenticator_selection: self.authenticator_selection.clone(),
             timeout: self.timeout,
         })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::errors::Error;
-    use base64urlsafedata::Base64UrlSafeData;
-    use serde_json;
-
-    #[test]
-    fn test_it() -> Result<(), Error> {
-        let policy = WebauthnPolicy::default();
-
-        let challenge = PublicKeyCredentialCreationOptions::builder()
-            .with_user(
-                UserEntity::builder()
-                    .with_display_name(&Some(policy.default_user_display_name.clone()))
-                    .with_name("bob@email.com")
-                    .build()?,
-            )
-            .with_rp(RpEntity::from(&policy))
-            .with_attestation(AttestationConveyancePreference::Direct)
-            .with_pub_key_cred_params(PublicKeyCredentialParameters::from(&policy))
-            .with_timeout(360000)
-            .with_authenticator_selection(AuthenticatorSelectionCriteria::from(&policy))
-            .build()?;
-        dbg!(&challenge);
-        let result = serde_json::to_string(&challenge).expect("Oops");
-        dbg!(&result);
-        Ok(())
-    }
-
-    #[test]
-    fn test_defaults() -> Result<(), Error> {
-        let policy = WebauthnPolicy::default();
-        let mut challenge = PublicKeyCredentialCreationOptions::from(&policy);
-        challenge.user.id = Some(Base64UrlSafeData(make_id(32).unwrap()));
-        dbg!(&challenge);
-        Ok(())
     }
 }

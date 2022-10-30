@@ -6,6 +6,12 @@
 //! This works because the client is configured to copy the X-SESSION
 //! header on XDR calls.
 //!
+//! The session is identified locally by its id attribute. The id is placed
+//! in the session header.
+//!
+//! A session is just a hash of name:value pairs.  You can store anything, as
+//! long as it is a string.
+//!
 use actix_web::HttpRequest;
 use base64urlsafedata::Base64UrlSafeData;
 use std::collections::HashMap;
@@ -40,8 +46,9 @@ impl Session {
         self.entries.is_empty()
     }
 
-    pub fn insert(&mut self, key: &str, value: &str) {
+    pub fn with(mut self, key: &str, value: &str) -> Self {
         self.entries.insert(key.to_owned(), value.to_owned());
+        self
     }
 
     pub fn as_b64(&self, name: &str) -> Result<Base64UrlSafeData, Error> {

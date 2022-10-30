@@ -4,15 +4,6 @@ use serde::{Deserialize, Serialize};
 use crate::errors::Error;
 use crate::utils::make_id;
 
-use super::WebauthnPolicy;
-/*
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct UserName {
-    pub name: String,
-}
-*/
-
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct UserEntity {
@@ -24,16 +15,6 @@ pub struct UserEntity {
 impl UserEntity {
     pub fn builder() -> UserEntityBuilder {
         UserEntityBuilder::default()
-    }
-}
-
-impl From<&WebauthnPolicy> for UserEntity {
-    fn from(policy: &WebauthnPolicy) -> Self {
-        Self {
-            id: None,
-            name: policy.default_user_name.clone(),
-            display_name: Some(policy.default_user_display_name.clone()),
-        }
     }
 }
 
@@ -59,18 +40,18 @@ impl UserEntityBuilder {
         }
     }
 
-    pub fn with_name(&mut self, name: &str) -> &mut Self {
+    pub fn with_name(mut self, name: &str) -> Self {
         self.name = Some(name.to_owned());
         self
     }
 
     #[allow(non_snake_case)]
-    pub fn with_display_name(&mut self, displayName: &Option<String>) -> &mut Self {
+    pub fn with_display_name(mut self, displayName: &Option<String>) -> Self {
         self.display_name = displayName.clone();
         self
     }
 
-    pub fn with_id(&mut self, id: &[u8]) -> &mut Self {
+    pub fn with_id(mut self, id: &[u8]) -> Self {
         self.id = Some(Base64UrlSafeData(id.to_vec()));
         self
     }

@@ -12,7 +12,6 @@ pub async fn creation_response(
     credential: web::Json<CreationPublicKeyCredential>,
     req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    log::info!("PublicKeyCredential: {:?}", &credential);
     let config = service.get_config().await?;
 
     // Get the session from the request header
@@ -32,6 +31,25 @@ pub async fn creation_response(
     // by register_challenge_request
     // The challenge should have been stored as Base64.  Decode it
     let challenge = session.as_b64("challenge")?;
+    if let Err(err) = service.use_challenge(&challenge).await {
+        match err {
+            Error::ChallengeNotFound => {
+                log::info!("Provided challenge was not found");
+                return Ok(HttpResponse::NotFound().json(r#"{ "message": "Challenge not found" }"#));
+            }
+            Error::ChallengeUsed => {
+                log::info!("Provided challenge was not valid");
+                return Ok(
+                    HttpResponse::Forbidden().json(r#"{ "message": "Challenge is already used" }"#)
+                );
+            }
+            _ => {
+                return Ok(HttpResponse::InternalServerError()
+                    .json(r#"{ "message": "Error getting session" }"#))
+            }
+        }
+    }
+
     let name = session.as_str("name")?;
 
     // ------------ 7.1 RP verification ----------------//
@@ -40,10 +58,6 @@ pub async fn creation_response(
 
     // 7.1 Step 7
     if credential.type_ != PublicKeyCredentialType::PublicKey {
-        log::info!(
-            "PublicKeyCredentialType not supported: {:?}",
-            credential.type_
-        );
         // Bad type attribute
         return Ok(HttpResponse::BadRequest()
             .json(r#"{ "message": "PublicKeyCredentialTyep type must be 'public-key" }"#));
@@ -70,13 +84,9 @@ pub async fn creation_response(
     let auth_data = result.unwrap();
 
     // The response is valid.
-    // Step 22: Verify that the credentialId is not being used
-    // The authData is returnef from the verify function
+    // The authData is returned from the verify function
     let id = Base64UrlSafeData(auth_data.credential_data()?.credential_id);
-    let cache_response = service
-        .get_credential(&id)
-        .await
-        .map_err(|_| Error::GeneralError)?;
+    let cache_response = service.get_credential(&id).await?;
 
     if let Some(_creds) = cache_response {
         log::info!("Credential ID is already used");

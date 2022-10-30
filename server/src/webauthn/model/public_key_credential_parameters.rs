@@ -38,12 +38,12 @@ impl PublicKeyCredentialParametersBuilder {
         }
     }
 
-    pub fn with_key_type(&mut self, key_type: PublicKeyCredentialType) -> &mut Self {
+    pub fn with_key_type(mut self, key_type: PublicKeyCredentialType) -> Self {
         self.key_type = Some(key_type);
         self
     }
 
-    pub fn with_alg(&mut self, alg: COSEAlgorithm) -> &mut Self {
+    pub fn with_alg(mut self, alg: COSEAlgorithm) -> Self {
         self.alg = Some(alg);
         self
     }

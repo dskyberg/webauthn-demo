@@ -1,14 +1,11 @@
 use base64urlsafedata::Base64UrlSafeData;
-use redis::{AsyncCommands, Value};
 
-use super::{Cache, SessionData, User, DB};
+use super::{Cache, Challenge, SessionData, User, DB};
 use crate::{
     config::AppConfig,
     errors::Error,
     webauthn::model::{Credential, UserEntity, WebauthnPolicy, WebauthnPolicyBuilder},
 };
-
-const SESSIONS_KEY: &str = "sessions";
 
 // Service wrapper for cache and database
 ///
@@ -27,10 +24,10 @@ impl DataServices {
     /// Establishes the client connections to the database and cache.
     ///
     /// This should be called only once in the crate main.
-    pub async fn create() -> DataServices {
-        let cache = Cache::new().await;
-        let db = DB::new().await;
-        DataServices { cache, db }
+    pub async fn create() -> Result<DataServices, Error> {
+        let cache = Cache::create().await?;
+        let db = DB::create().await?;
+        Ok(DataServices { cache, db })
     }
 
     pub async fn get_config(&self) -> Result<AppConfig, Error> {
@@ -135,23 +132,54 @@ impl DataServices {
         id: &Base64UrlSafeData,
         data: &SessionData,
     ) -> Result<(), Error> {
-        let cache_key = format!("{}:{}", SESSIONS_KEY, id).to_owned();
-        let mut con = self.cache.client.get_async_connection().await?;
-        let data = serde_json::to_vec(data).map_err(Error::SerdeJsonError)?;
-        con.set(&cache_key, data).await?;
-
-        Ok(())
+        self.cache.put_session(id, data).await
     }
 
     pub async fn get_session(&self, id: &Base64UrlSafeData) -> Result<Option<SessionData>, Error> {
-        let cache_key = format!("{}:{}", SESSIONS_KEY, id).to_owned();
-        let mut con = self.cache.client.get_async_connection().await?;
-        let cache_response = con.get(&cache_key).await?;
+        self.cache.fetch_session(id).await
+    }
 
-        match cache_response {
-            Value::Nil => Ok(None),
-            Value::Data(val) => Ok(serde_json::from_slice(&val).map_err(Error::SerdeJsonError)?),
-            _ => Err(Error::GeneralError),
+    /// Generate a new challenge and store it.
+    pub async fn create_new_challenge(&self) -> Result<Challenge, Error> {
+        let challenge = Challenge::new();
+        if self.db.check_challenge(&challenge.value).await? {
+            // The challenge already exists
+            return Err(Error::ChallengeExists);
         }
+        self.db.add_challenge(&challenge).await?;
+        Ok(challenge)
+    }
+
+    /// Create a challenge from a value, and store it.
+    pub async fn create_challenge(&self, value: &Base64UrlSafeData) -> Result<(), Error> {
+        if self.db.check_challenge(value).await? {
+            // The challenge already exists
+            return Err(Error::ChallengeExists);
+        }
+
+        let challenge = Challenge::from(value);
+        self.db.add_challenge(&challenge).await?;
+        Ok(())
+    }
+
+    /// Fulfill the "use once" strategy.  Mark a stored challenge as used.
+    pub async fn use_challenge(&self, value: &Base64UrlSafeData) -> Result<(), Error> {
+        // See if the challenge exists.  Throw not found otherwise
+        let result = self.db.fetch_challenge(value).await?;
+        if result.is_none() {
+            return Err(Error::ChallengeNotFound);
+        }
+        let challenge = result.unwrap();
+
+        // See if the challenge is already used.  Throw already used if so
+        if challenge.used {
+            return Err(Error::ChallengeUsed);
+        }
+
+        // Update the challenge, and return OK
+        let new = challenge.mark_used();
+        self.db.update_challenge(&new).await?;
+
+        Ok(())
     }
 }

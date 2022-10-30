@@ -189,29 +189,3 @@ impl AuthenticatorAttestationResponse {
         Ok(attestation.auth_data.clone())
     }
 }
-
-#[cfg(test)]
-mod tests {
-
-    use super::*;
-    use crate::errors::Error;
-    use serde_json;
-
-    #[test]
-    fn test_it() -> Result<(), Error> {
-        let json = include_str!("../../../test_data/platform-attestation-response.json");
-        let policy = WebauthnPolicy::default();
-
-        let response: AuthenticatorAttestationResponse =
-            serde_json::from_str(json).expect("not yet");
-        //dbg!(&response);
-
-        // The challenge would be provided from a persistent source, such as the session
-        // For testing, just grab the one in the response.
-        let challenge = response.get_client_data().expect("oops").challenge;
-
-        let result = response.verify(&policy, &challenge);
-        assert!(result.is_ok());
-        Ok(())
-    }
-}

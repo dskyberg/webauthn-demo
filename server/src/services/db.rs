@@ -7,7 +7,7 @@ use mongodb::{
 };
 use std::env;
 
-use super::User;
+use super::{Challenge, User};
 use crate::{
     config::AppConfig,
     errors::Error,
@@ -17,6 +17,7 @@ use crate::{
 const CRED_COLLECTION: &str = "credentials";
 const USER_COLLECTION: &str = "users";
 const APP_CONFIG_COLLECTION: &str = "appconfig";
+const WEBAUTHN_CHALLENGE_COLLECTION: &str = "webauthn_challenge";
 
 #[derive(Clone, Debug)]
 pub struct DB {
@@ -25,7 +26,7 @@ pub struct DB {
 }
 
 impl DB {
-    pub async fn new() -> Self {
+    pub async fn create() -> Result<Self, Error> {
         // Read the config from either the environment or a .env file.
         let mongo_uri =
             env::var("MONGODB_URI").unwrap_or_else(|_| "mongodb://127.0.0.1:27017".to_string());
@@ -33,15 +34,16 @@ impl DB {
         let app_name = env::var("MONGODB_APP_NAME").unwrap_or_else(|_| "demo".to_string());
 
         // Create the ClientOptions and set the app_name
-        let mut client_options = ClientOptions::parse(mongo_uri)
-            .await
-            .expect("Failed to create client options");
+        let mut client_options = ClientOptions::parse(mongo_uri).await.map_err(|_| {
+            Error::ServiceError("MongoDB: failed to parse client options".to_string())
+        })?;
         client_options.app_name = Some(app_name);
 
         // Create the client and grab a database handle
-        let client = Client::with_options(client_options).expect("Failed to create MongoDB client");
+        let client = Client::with_options(client_options)
+            .map_err(|_| Error::ServiceError("Failed to create MongoDB client".to_string()))?;
         let database = client.database(&database_name);
-        Self { client, database }
+        Ok(Self { client, database })
     }
 
     fn users(&self) -> Collection<User> {
@@ -54,6 +56,10 @@ impl DB {
 
     fn app_config(&self) -> Collection<AppConfig> {
         self.database.collection::<AppConfig>(APP_CONFIG_COLLECTION)
+    }
+    fn challenges(&self) -> Collection<Challenge> {
+        self.database
+            .collection::<Challenge>(WEBAUTHN_CHALLENGE_COLLECTION)
     }
 
     pub async fn fetch_config(&self) -> Result<Option<AppConfig>, Error> {
@@ -175,9 +181,10 @@ impl DB {
 
     pub async fn delete_user_and_credentials(&self, name: &str) -> Result<(), Error> {
         log::info!("Deleting {}", name);
+
         let result = self.fetch_user_by_name(name).await?;
         if result.is_none() {
-            log::info!("Deleting {} - user not found", name);
+            log::trace!("Deleting {} - user not found", name);
             return Err(Error::NotFound);
         }
         let user = result.unwrap();
@@ -189,6 +196,59 @@ impl DB {
             }
         }
         self.delete_user(name).await?;
+        Ok(())
+    }
+
+    //---------------------------------------------------------------
+    // Challenge management.  Ensure challenges are only used once
+    //----------------------------------------------------------------
+    pub async fn add_challenge(&self, challenge: &Challenge) -> Result<InsertOneResult, Error> {
+        Ok(self.challenges().insert_one(challenge, None).await?)
+    }
+
+    pub async fn fetch_challenge(
+        &self,
+        value: &Base64UrlSafeData,
+    ) -> Result<Option<Challenge>, Error> {
+        match self
+            .challenges()
+            .find_one(doc! {"value": value.to_string()}, None)
+            .await?
+        {
+            Some(challenge) => Ok(Some(challenge)),
+            None => Ok(None),
+        }
+    }
+
+    pub async fn check_challenge(&self, value: &Base64UrlSafeData) -> Result<bool, Error> {
+        let result = self
+            .challenges()
+            .count_documents(doc! {"value": value.to_string()}, None)
+            .await?;
+        if result > 0 {
+            return Ok(true);
+        }
+        Ok(false)
+    }
+
+    /// the only update-able fields are the used and used_time fields
+    pub async fn update_challenge(&self, challenge: &Challenge) -> Result<Challenge, Error> {
+        let new = challenge.mark_used();
+
+        self.challenges()
+            .update_one(
+                doc! {"value": new.value.to_string()},
+                doc! {"$set": {"used": new.used, "used_time": new.used_time.unwrap().to_string()}},
+                None,
+            )
+            .await?;
+        Ok(new)
+    }
+
+    pub async fn delete_challenge(&self, value: &Base64UrlSafeData) -> Result<(), Error> {
+        self.challenges()
+            .delete_one(doc! {"value": value.to_string()}, None)
+            .await?;
         Ok(())
     }
 }

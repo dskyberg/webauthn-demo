@@ -1,3 +1,7 @@
+/// Receives a WebAuthn assertion and verifies it.
+/// The credential is looked up based on the credential ID passed
+/// in the [AssertionPublicKeyCredential].  
+///  
 use actix_web::{web, HttpRequest, HttpResponse};
 
 use crate::{
@@ -11,7 +15,6 @@ pub async fn assertion_response(
     credential: web::Json<AssertionPublicKeyCredential>,
     req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    //log::info!("PublicKeyCredential: {:?}", &credential);
     let config = service.get_config().await?;
 
     // Get the session from the request header
@@ -30,7 +33,26 @@ pub async fn assertion_response(
     // by register_challenge_request
     // The challenge should have been stored as Base64.  Decode it
     let challenge = session.as_b64("challenge")?;
-    let name = session.as_str("name")?;
+    if let Err(err) = service.use_challenge(&challenge).await {
+        match err {
+            Error::ChallengeNotFound => {
+                log::info!("Provided challenge was not found");
+                return Ok(HttpResponse::NotFound().json(r#"{ "message": "Challenge not found" }"#));
+            }
+            Error::ChallengeUsed => {
+                log::info!("Provided challenge was not valid");
+                return Ok(
+                    HttpResponse::Forbidden().json(r#"{ "message": "Challenge is already used" }"#)
+                );
+            }
+            _ => {
+                return Ok(HttpResponse::InternalServerError()
+                    .json(r#"{ "message": "Error getting session" }"#))
+            }
+        }
+    }
+
+    // let name = session.as_str("name")?;
 
     // ------------ 7.1 RP verification ----------------//
     // Steps 1 - 6 are either performed in javascript before
@@ -44,7 +66,12 @@ pub async fn assertion_response(
     }
 
     // Get the credential from the data store
-    let cred = service.get_user_credential(&name).await?.unwrap();
+    //let cred = service.get_user_credential(&name).await?.unwrap();
+    let result = service.get_credential(&credential.id).await?;
+    if result.is_none() {
+        return Ok(HttpResponse::NotFound().json(r#"{ "message": "Credential not found" }"#));
+    }
+    let cred = result.unwrap();
 
     // Verify the response
     let result = credential

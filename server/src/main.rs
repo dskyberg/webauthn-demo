@@ -3,9 +3,11 @@ use dotenv::dotenv;
 use server::{api, webauthn, DataServices};
 
 pub async fn app_state() -> web::Data<DataServices> {
-    let services = DataServices::create().await;
-    // App::app_data will wrap the app state in an Arc, so it is sharable
+    let services = DataServices::create()
+        .await
+        .expect("Services failed. Did you remember to start them?");
     web::Data::new(services)
+    // App::app_data will wrap the app state in an Arc, so it is sharable
 }
 
 #[actix_web::main]

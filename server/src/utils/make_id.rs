@@ -1,3 +1,4 @@
+/// Generate a random secret using the Ring rand function.
 use crate::errors::Error;
 use ring::rand::SecureRandom;
 
