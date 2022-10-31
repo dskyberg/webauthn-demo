@@ -18,12 +18,12 @@ pub async fn assertion_response(
     let config = service.get_config().await?;
 
     // Get the session from the request header
-    let session = Session::from_request(&service, &req).await.map_err(|e| {
-        log::info!("Failed to get session from data service");
+    let mut session = Session::from_request(&service, &req).await.map_err(|e| {
+        log::trace!("Failed to get session from data service");
         e
     })?;
     if session.is_empty() {
-        log::info!("Session is invalid.  No entries");
+        log::trace!("Session is invalid.  No entries");
         return Ok(
             HttpResponse::InternalServerError().json(r#"{ "message": "Error getting session" }"#)
         );
@@ -36,11 +36,11 @@ pub async fn assertion_response(
     if let Err(err) = service.use_challenge(&challenge).await {
         match err {
             Error::ChallengeNotFound => {
-                log::info!("Provided challenge was not found");
+                log::trace!("Provided challenge was not found");
                 return Ok(HttpResponse::NotFound().json(r#"{ "message": "Challenge not found" }"#));
             }
             Error::ChallengeUsed => {
-                log::info!("Provided challenge was not valid");
+                log::trace!("Provided challenge was not valid");
                 return Ok(
                     HttpResponse::Forbidden().json(r#"{ "message": "Challenge is already used" }"#)
                 );
@@ -81,19 +81,23 @@ pub async fn assertion_response(
     match result {
         Err(err) => match err {
             Error::BadChallenge => {
-                log::info!("Challenge mismatch");
+                log::trace!("Challenge mismatch");
                 Ok(HttpResponse::Unauthorized().json(r#"{ "message": "bad challenge" }"#))
             }
             Error::BadOrigin => {
-                log::info!("Origin mismatch");
+                log::trace!("Origin mismatch");
                 Ok(HttpResponse::Unauthorized().json(r#"{ "message": "bad origin" }"#))
             }
             _ => Err(err),
         },
         Ok(credential) => {
+            session.insert("authenticated", "true");
+
             // Update the credential so that the counter and date stuff is right.
             service.update_credential(&credential).await?;
-            Ok(HttpResponse::Ok().json(r#"{"status": "ok"}"#))
+            Ok(HttpResponse::Ok()
+                .insert_header(session.to_header())
+                .json(r#"{"status": "ok"}"#))
         }
     }
 }

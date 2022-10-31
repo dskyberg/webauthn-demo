@@ -6,9 +6,7 @@ const ENDPOINTS = {
     assertion: {
         challenge: '/webauthn/assertion/challenge',
         response: '/webauthn/assertion/response'
-    },
-    user: '/api/users',
-    credentials: '/api/credentials/user',
+    }
 }
 
 const base64url_encode = (buffer) => {
@@ -149,72 +147,4 @@ export async function assertCredential(data = {}) {
     return await sendWebAuthnResponse('assertion', assertionResponse)
 }
 
-// Get the user associated with the name
-export async function getUser(formBody) {
-    let url = `${ENDPOINTS.user}/${formBody.name}`
-    const response = await fetch(url, {
-        method: 'get',
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-
-    if (response.status === 404) {
-        console.log('getUser - not found. Returning null')
-        return null
-    }
-
-    if (response.status < 200 || response.status > 205) {
-        throw new Error('Server responded with error.')
-    }
-
-    return await response.json()
-}
-
-// Will return true if the name exists.  Else false
-export async function checkUser(formBody) {
-    let url = `${ENDPOINTS.user}/${formBody.name}`
-    const response = await fetch(url, {
-        method: 'HEAD',
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-
-    if (response.status === 404) {
-        console.log('checkUser - not found. Returning null')
-        return false
-    }
-
-    if (response.status < 200 || response.status > 205) {
-        throw new Error('Server responded with error.')
-    }
-
-    return true
-}
-
-export async function getUserCredentials(formBody) {
-    const response = await fetch(ENDPOINTS.credentials, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formBody)
-    })
-
-    if (response.status === 404) {
-        console.log('getUserCredentials - not found. Returning null')
-        return null
-    }
-
-    if (response.status < 200 || response.status > 205) {
-        throw new Error('Server responded with error.')
-    }
-
-    return await response.json()
-
-}
 

@@ -13,13 +13,13 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                 web::resource("/credentials/user")
                     .route(web::post().to(handlers::get_user_credentials)),
             )
-            .service(web::resource("/users").route(web::get().to(handlers::get_users)))
             .service(
-                web::resource("/users/{name}")
-                    .route(web::head().to(handlers::check_user))
-                    .route(web::delete().to(handlers::delete_user))
-                    .route(web::get().to(handlers::get_user)),
+                web::resource("/users")
+                    .route(web::get().to(handlers::get_users))
+                    .route(web::post().to(handlers::get_user)),
             )
-            .service(web::resource("/credentials")),
+            .service(web::resource("/users/check").route(web::post().to(handlers::check_user)))
+            .service(web::resource("/users/delete").route(web::post().to(handlers::delete_user)))
+            .service(web::resource("/users/logout").route(web::post().to(handlers::logout_user))),
     );
 }

@@ -10,7 +10,7 @@ export default class UsersStore {
 
     loadUsers() {
         this.isLoading = true;
-        fetch('/users', {
+        fetch('/api/users', {
             method: 'GET',
             credentials: 'include',
             headers: {

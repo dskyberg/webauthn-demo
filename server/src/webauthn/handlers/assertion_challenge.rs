@@ -13,7 +13,7 @@ pub async fn assertion_challenge(
     request: web::Json<UserEntity>,
     _req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    log::info!("Registration Request: {:?}", &request);
+    log::trace!("Registration Request: {:?}", &request);
 
     // The AppConfig will drive behavior
     let config = service.get_config().await?;
@@ -22,7 +22,7 @@ pub async fn assertion_challenge(
     let user = match service.get_user(&request.name).await? {
         Some(user) => user,
         None => {
-            log::info!("User not found: {}", request.name);
+            log::trace!("User not found: {}", request.name);
             return Ok(HttpResponse::Forbidden().json(format!(
                 r#"{{"message": "User not found: {}"}}"#,
                 request.name
@@ -34,7 +34,7 @@ pub async fn assertion_challenge(
     let credential = match service.get_user_credential(&user.name).await? {
         Some(c) => c,
         None => {
-            log::info!("Credential not found for user: {}", request.name);
+            log::trace!("Credential not found for user: {}", request.name);
             return Ok(HttpResponse::Forbidden().body(format!(
                 r#"{{"message": "Credential not found: {}"}}"#,
                 request.name
@@ -62,15 +62,4 @@ pub async fn assertion_challenge(
     Ok(HttpResponse::Ok()
         .insert_header(session.to_header())
         .json(pk_options))
-}
-
-#[cfg(test)]
-mod tests {
-    use serde_json::json;
-
-    #[test]
-    fn test_it() {
-        let msg = "error messasge";
-        println!("{}", json! {{"message": msg}});
-    }
 }

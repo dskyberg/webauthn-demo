@@ -38,6 +38,7 @@ export default function Login(props) {
                 <FormControl id="user-name">
                     <FormLabel mb='8px'>Username</FormLabel>
                     <Input
+                        autoFocus={true}
                         type="text"
                         placeholder="your.name@email.com"
                         value={name}

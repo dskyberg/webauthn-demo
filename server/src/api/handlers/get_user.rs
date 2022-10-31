@@ -1,20 +1,22 @@
 use actix_web::{web, HttpResponse};
 
-use crate::{errors::Error, DataServices};
+use crate::{errors::Error, webauthn::model::UserEntity, DataServices};
 
+/// Get a user via HTTP Post
 pub async fn get_user(
-    path: web::Path<(String,)>,
     service: web::Data<DataServices>,
+    request: web::Json<UserEntity>,
 ) -> Result<HttpResponse, Error> {
-    let (name,) = path.into_inner();
-    log::trace!("Get User Request: {}", &name);
-
-    let result = service.db.fetch_user_by_name(&name).await.map_err(|_| {
-        log::trace!("Failed getting user: {}", &name);
-        Error::InternalServiceError("Failed getting user".to_string())
-    })?;
-    match result {
-        Some(user) => Ok(HttpResponse::Ok().json(&user)),
-        None => Ok(HttpResponse::NotFound().finish()),
+    // See if this user already exists.  If so, return 403
+    let user = service.get_user(&request.name).await?;
+    if user.is_none() {
+        // Return already registered
+        return Ok(HttpResponse::NotFound().body(format!(
+            r#"{{"message": "User not found: {}"}}"#,
+            request.name
+        )));
     }
+
+    // Return the PK Options
+    Ok(HttpResponse::Ok().json(user))
 }

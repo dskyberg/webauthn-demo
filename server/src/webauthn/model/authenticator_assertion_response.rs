@@ -53,13 +53,13 @@ impl AuthenticatorAssertionResponse {
         challenge: &Base64UrlSafeData,
         credential: &Credential,
     ) -> Result<Credential, Error> {
-        log::info!("Verify start");
+        log::trace!("Verify start");
         let client_data = self.get_client_data()?;
 
         // 7.2 step 11: Verify the type
         if client_data.client_data_type != ClientDataType::Get {
             // Wrong type
-            log::info!("Verify: Not a credential assertion");
+            log::trace!("Verify: Not a credential assertion");
             return Err(Error::AssertionVerificationError(
                 "Not a credential attestation".to_string(),
             ));
@@ -79,7 +79,7 @@ impl AuthenticatorAssertionResponse {
 
         // 7.2 step 14; Verify token binding
         if let Some(token_binding) = client_data.token_binding {
-            log::info!("Token binding status: {:?}", token_binding.status);
+            log::trace!("Token binding status: {:?}", token_binding.status);
         }
 
         // 7.2 step 15: Verify the rp_id hash
@@ -88,7 +88,7 @@ impl AuthenticatorAssertionResponse {
         let rp_id_hash = sha256(policy.rp_id.as_bytes());
         let auth_data =
             AuthenticatorData::try_from(self.authenticator_data.as_ref()).map_err(|e| {
-                log::info!("Failed to decode AuthenticatorData");
+                log::trace!("Failed to decode AuthenticatorData");
                 e
             })?;
         if rp_id_hash != auth_data.rp_id_hash {
@@ -99,14 +99,14 @@ impl AuthenticatorAssertionResponse {
 
         // 7.2 step 16; Verify userPresent flag
         if !auth_data.is_user_present() {
-            log::info!("Verify: User not present");
+            log::trace!("Verify: User not present");
             return Err(Error::AssertionVerificationError(
                 "userPresent flag not set".to_string(),
             ));
         }
         // 7.2 step 17; Verify userPresent flag
         if !auth_data.is_user_verified() {
-            log::info!("Verify: User not verified");
+            log::trace!("Verify: User not verified");
             return Err(Error::AssertionVerificationError(
                 "userVerified flag not set".to_string(),
             ));
@@ -118,7 +118,7 @@ impl AuthenticatorAssertionResponse {
         let mut new_cred = credential.clone();
         new_cred.last = Utc::now();
         if policy.validate_sign_count && auth_data.counter <= credential.counter {
-            log::info!("ERROR!!!  Bad signCount {:}", &auth_data.counter);
+            log::trace!("ERROR!!!  Bad signCount {:}", &auth_data.counter);
             return Err(Error::BadSignCounter);
         } else {
             new_cred.counter = auth_data.counter;
@@ -151,7 +151,7 @@ impl AuthenticatorAssertionResponse {
                 "Assertion signature did not verify".to_string(),
             ));
         }
-        log::info!("Signature validated");
+        log::trace!("Signature validated");
         Ok(new_cred)
     }
 }

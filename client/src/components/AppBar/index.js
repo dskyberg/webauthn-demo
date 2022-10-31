@@ -18,6 +18,7 @@ const AppBar = observer((props) => {
     const handleLogout = () => {
         auth.signout().then(() => {
             console.log('Logging out')
+            navigate("/")
         })
     }
 

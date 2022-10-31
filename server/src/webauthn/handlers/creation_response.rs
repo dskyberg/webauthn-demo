@@ -16,12 +16,12 @@ pub async fn creation_response(
 
     // Get the session from the request header
     let session = Session::from_request(&service, &req).await.map_err(|e| {
-        log::info!("Failed to get session from data service");
+        log::trace!("Failed to get session from data service");
         e
     })?;
 
     if session.is_empty() {
-        log::info!("Session is invalid.  No entries");
+        log::trace!("Session is invalid.  No entries");
         return Ok(
             HttpResponse::InternalServerError().json(r#"{ "message": "Error getting session" }"#)
         );
@@ -34,11 +34,11 @@ pub async fn creation_response(
     if let Err(err) = service.use_challenge(&challenge).await {
         match err {
             Error::ChallengeNotFound => {
-                log::info!("Provided challenge was not found");
+                log::trace!("Provided challenge was not found");
                 return Ok(HttpResponse::NotFound().json(r#"{ "message": "Challenge not found" }"#));
             }
             Error::ChallengeUsed => {
-                log::info!("Provided challenge was not valid");
+                log::trace!("Provided challenge was not valid");
                 return Ok(
                     HttpResponse::Forbidden().json(r#"{ "message": "Challenge is already used" }"#)
                 );
@@ -67,15 +67,15 @@ pub async fn creation_response(
     if let Err(err) = result {
         match err {
             Error::BadChallenge => {
-                log::info!("Challenge mismatch");
+                log::trace!("Challenge mismatch");
                 return Ok(HttpResponse::Unauthorized().json(r#"{ "message": "bad challenge" }"#));
             }
             Error::BadOrigin => {
-                log::info!("Origin mismatch");
+                log::trace!("Origin mismatch");
                 return Ok(HttpResponse::Unauthorized().json(r#"{ "message": "bad origin" }"#));
             }
             _ => {
-                log::info!("Challenge: unexpected error: {}", &err.to_string());
+                log::trace!("Challenge: unexpected error: {}", &err.to_string());
                 return Err(err);
             }
         }
@@ -89,7 +89,7 @@ pub async fn creation_response(
     let cache_response = service.get_credential(&id).await?;
 
     if let Some(_creds) = cache_response {
-        log::info!("Credential ID is already used");
+        log::trace!("Credential ID is already used");
         return Ok(HttpResponse::Unauthorized().json(r#"{ "message": "credentialId in use" }"#));
     }
     // Save the credential

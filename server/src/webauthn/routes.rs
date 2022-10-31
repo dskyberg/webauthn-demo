@@ -1,16 +1,7 @@
 use actix_web::web;
 
 use crate::webauthn::handlers;
-/*
-/webauthn
-    /users
-    /assertion
-        /challenge
-        /response
-    /credential
-        /challenge
-        /response
- */
+
 pub fn routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/webauthn")

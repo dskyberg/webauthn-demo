@@ -2,9 +2,32 @@ import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth'
 import { Container, HStack, Button, VStack, Input, InputGroup, InputRightElement, IconButton, useToast, FormControl, FormLabel } from '@chakra-ui/react'
-import { checkUser } from '../webauthn'
 import { BiCaretRight } from 'react-icons/bi'
 import { setWarning, setError } from '../components/toast'
+
+// Will return true if the name exists.  Else false
+export async function checkUser(formBody) {
+    const response = await fetch('/api/users/check', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formBody)
+    })
+
+    if (response.status === 404) {
+        console.log('checkUser - not found. Returning null')
+        return false
+    }
+
+    if (response.status < 200 || response.status > 205) {
+        throw new Error('Server responded with error.')
+    }
+
+    return true
+}
+
 
 export default function Login(props) {
     let navigate = useNavigate();
@@ -53,6 +76,13 @@ export default function Login(props) {
         navigate("/register", { replace: true })
     }
 
+    const handleKeyPress = e => {
+        console.log('keypress')
+        if (e.keyCode === 13) {
+            onCheck()
+        }
+    }
+
     return (
         <Container>
             <VStack shadow="base"
@@ -64,7 +94,9 @@ export default function Login(props) {
                             type="text"
                             placeholder="your.name@email.com"
                             value={name}
+                            autoFocus={true}
                             onChange={e => setName(e.target.value)}
+                            onKeyDown={handleKeyPress}
                         />
                         <InputRightElement>
                             <IconButton onClick={onCheck}>{<BiCaretRight />}</IconButton>

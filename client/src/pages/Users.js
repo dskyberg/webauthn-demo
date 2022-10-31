@@ -8,6 +8,12 @@ import {
 
 import { useStore } from '../store';
 
+const UserProfile = ({ user }) => {
+    return (
+        <div>{user.name}</div>
+    )
+}
+
 const Users = observer((props) => {
     const { onLogin, onRegister } = props
     const { users } = useStore()
@@ -23,11 +29,12 @@ const Users = observer((props) => {
         )
     }
 
+
     return (
         <Container>
             <Stack spacing={2} direction="column">
-                <p>WebAuthn Demo</p>
-
+                <p>Users</p>
+                {users.users.map((user, idx) => <UserProfile key={idx} user={user} />)}
             </Stack>
         </Container>
     )

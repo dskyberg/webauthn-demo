@@ -51,9 +51,7 @@ impl DataServices {
         policy: WebauthnPolicyBuilder,
     ) -> Result<WebauthnPolicy, Error> {
         let mut config = self.get_config().await?;
-        log::info!("Patch set: {:?}", &policy);
         config.webauthn.update(policy)?;
-        log::info!("Updated policy: {:?}", &config);
         self.put_config(&config).await?;
         Ok(config.webauthn)
     }

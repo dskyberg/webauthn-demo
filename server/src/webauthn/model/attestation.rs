@@ -25,17 +25,17 @@ pub struct Attestation {
 impl TryFrom<&[u8]> for Attestation {
     type Error = Error;
     fn try_from(data: &[u8]) -> Result<Self, Self::Error> {
-        log::info!("Attestation::try_from");
+        log::trace!("Attestation::try_from");
         let ai: AttestationInner = serde_cbor::from_slice(data).map_err(|e| {
-            log::info!("serde_cbor failed");
+            log::trace!("serde_cbor failed");
             Error::AttestationParseError(e)
         })?;
         let auth_data_bytes = cbor_try_bytes(&ai.auth_data).map_err(|e| {
-            log::info!("Attestation::try_from: cbor_try_bytes failed");
+            log::trace!("Attestation::try_from: cbor_try_bytes failed");
             e
         })?;
         let auth_data = AuthenticatorData::try_from(&ai.auth_data).map_err(|e| {
-            log::info!("Attestation::try_from: AuthenticatorData::try_from failed");
+            log::trace!("Attestation::try_from: AuthenticatorData::try_from failed");
             e
         })?;
         Ok(Attestation {
@@ -58,7 +58,7 @@ fn cbor_try_bytes(value: &Value) -> Result<Vec<u8>, Error> {
     match value {
         Value::Bytes(bytes) => Ok(bytes.to_owned()),
         _ => {
-            log::info!("CBOR is not a Vec<u8> value");
+            log::trace!("CBOR is not a Vec<u8> value");
             Err(Error::AttestationObjectError(
                 "Not Value::Bytes".to_string(),
             ))

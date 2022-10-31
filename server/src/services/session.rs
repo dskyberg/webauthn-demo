@@ -51,6 +51,10 @@ impl Session {
         self
     }
 
+    pub fn insert(&mut self, key: &str, value: &str) {
+        self.entries.insert(key.to_owned(), value.to_owned());
+    }
+
     pub fn as_b64(&self, name: &str) -> Result<Base64UrlSafeData, Error> {
         // Get the challenge and name that was placed in the session
         // by register_challenge_request

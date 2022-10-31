@@ -48,7 +48,7 @@ impl AuthenticatorAttestationResponse {
         policy: &WebauthnPolicy,
         challenge: &Base64UrlSafeData,
     ) -> Result<AuthenticatorData, Error> {
-        log::info!("Verify: start");
+        log::trace!("Verify: start");
         let attestation = self.attestation()?;
         match attestation.fmt {
             AttestationFormatIdentifier::Packed => self.verify_packed(policy, challenge),
@@ -63,10 +63,10 @@ impl AuthenticatorAttestationResponse {
         policy: &WebauthnPolicy,
         challenge: &Base64UrlSafeData,
     ) -> Result<AuthenticatorData, Error> {
-        log::info!("Packed Verify: start");
+        log::trace!("Packed Verify: start");
 
         let client_data = self.get_client_data()?;
-        log::info!("Got client data: {:?}", &client_data);
+        log::trace!("Got client data: {:?}", &client_data);
 
         // Compare the challenges
         if client_data.challenge != *challenge {
@@ -75,13 +75,13 @@ impl AuthenticatorAttestationResponse {
             return Err(Error::BadChallenge);
         }
 
-        log::info!("Verify: challenge matched");
+        log::trace!("Verify: challenge matched");
 
         // Verify the origin
         if client_data.origin != policy.origin {
             return Err(Error::BadOrigin);
         }
-        log::info!("Verify: origin matched");
+        log::trace!("Verify: origin matched");
 
         // 7.1 step 7: Verify the type
         if client_data.client_data_type != ClientDataType::Create {
@@ -96,7 +96,7 @@ impl AuthenticatorAttestationResponse {
         let alg = attestation.att_stmt.alg()?;
         let sig = attestation.att_stmt.sig()?;
 
-        log::info!("Verify: client data type is webauthn.get");
+        log::trace!("Verify: client data type is webauthn.get");
 
         // Verify the rp_id hash
         // If no RP ID is sent by the RP, then the origin domain is used.
@@ -108,7 +108,7 @@ impl AuthenticatorAttestationResponse {
                 "RP ID Hash does not match".to_string(),
             ));
         }
-        log::info!("Verify: rp_id_hash matched");
+        log::trace!("Verify: rp_id_hash matched");
 
         //------------- Verify the signature --------------
 
@@ -141,10 +141,10 @@ impl AuthenticatorAttestationResponse {
         policy: &WebauthnPolicy,
         challenge: &Base64UrlSafeData,
     ) -> Result<AuthenticatorData, Error> {
-        log::info!("None Verify: start");
+        log::trace!("None Verify: start");
 
         let client_data = self.get_client_data()?;
-        log::info!("Got client data: {:?}", &client_data);
+        log::trace!("Got client data: {:?}", &client_data);
 
         // Compare the challenges
         if client_data.challenge != *challenge {
@@ -153,13 +153,13 @@ impl AuthenticatorAttestationResponse {
             return Err(Error::BadChallenge);
         }
 
-        log::info!("Verify: challenge matched");
+        log::trace!("Verify: challenge matched");
 
         // Verify the origin
         if client_data.origin != policy.origin {
             return Err(Error::BadOrigin);
         }
-        log::info!("Verify: origin matched");
+        log::trace!("Verify: origin matched");
 
         // 7.1 step 7: Verify the type
         if client_data.client_data_type != ClientDataType::Create {
@@ -170,7 +170,7 @@ impl AuthenticatorAttestationResponse {
         }
         let attestation = &self.attestation()?;
 
-        log::info!("Verify: client data type is webauthn.get");
+        log::trace!("Verify: client data type is webauthn.get");
 
         // Verify the rp_id hash
         // If no RP ID is sent by the RP, then the origin domain is used.
@@ -182,10 +182,10 @@ impl AuthenticatorAttestationResponse {
                 "RP ID Hash does not match".to_string(),
             ));
         }
-        log::info!("Verify: rp_id_hash matched");
+        log::trace!("Verify: rp_id_hash matched");
 
         // There is no signature in a Passkey
-        log::info!("Verify: passkey verification complete");
+        log::trace!("Verify: passkey verification complete");
         Ok(attestation.auth_data.clone())
     }
 }

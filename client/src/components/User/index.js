@@ -3,10 +3,55 @@ import React, { useState, useEffect } from 'react';
 import { Center, Container, Skeleton } from '@chakra-ui/react';
 import { useAuth } from '../../auth'
 
-import { getUser, getUserCredentials } from '../../webauthn';
 import UserProfile from './UserProfile'
 import UserCredential from './UserCredential'
 import EmptyUser from './EmptyUser'
+
+// Get the user associated with the name
+export async function getUser(formBody) {
+    const response = await fetch('/api/users', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formBody)
+    })
+
+    if (response.status === 404) {
+        console.log('getUser - not found. Returning null')
+        return null
+    }
+
+    if (response.status < 200 || response.status > 205) {
+        throw new Error('Server responded with error.')
+    }
+
+    return await response.json()
+}
+
+export async function getUserCredentials(formBody) {
+    const response = await fetch('/api/credentials/user', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formBody)
+    })
+
+    if (response.status === 404) {
+        console.log('getUserCredentials - not found. Returning null')
+        return null
+    }
+
+    if (response.status < 200 || response.status > 205) {
+        throw new Error('Server responded with error.')
+    }
+
+    return await response.json()
+
+}
 
 export default function User(props) {
     const auth = useAuth()

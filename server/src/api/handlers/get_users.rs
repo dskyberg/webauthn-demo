@@ -6,11 +6,11 @@ pub async fn get_users(service: web::Data<DataServices>) -> Result<HttpResponse,
     let result = service.get_users().await;
     match result {
         Ok(users) => {
-            log::info!("Sending users: {:?}", &users);
+            log::trace!("Sending users: {:?}", &users);
             Ok(HttpResponse::Ok().json(&users))
         }
         Err(e) => {
-            log::info!("Sending users - error: {:?}", e.to_string());
+            log::trace!("Sending users - error: {:?}", e.to_string());
             Err(e)
         }
     }

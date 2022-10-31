@@ -34,7 +34,7 @@ impl CredentialData {
 impl TryFrom<&[u8]> for CredentialData {
     type Error = Error;
     fn try_from(data: &[u8]) -> Result<Self, Error> {
-        log::info!("CredentialData::try_from start");
+        log::trace!("CredentialData::try_from start");
         let data_len: usize = data.len();
         let mut remainder = data_len;
         let mut file = Cursor::new(data);
@@ -67,7 +67,7 @@ impl TryFrom<&[u8]> for CredentialData {
         let credential_public_key =
             CoseKey::decode_bytes(&credential_public_key_bytes).map_err(Error::CoseKeyError)?;
 
-        log::info!("CredentialData::try_from succeeded");
+        log::trace!("CredentialData::try_from succeeded");
         Ok(Self {
             aaguid,
             credential_id,
@@ -140,14 +140,14 @@ impl TryFrom<&[u8]> for AuthenticatorData {
                     Error::AuthenticatorDataDeserialize("Credentialdata".to_string())
                 })?;
                 if remainder != bytes_read {
-                    log::info!("Oops!! Too few bytes read!");
+                    log::trace!("Oops!! Too few bytes read!");
                 }
                 Some(CredentialData::try_from(bytes.as_ref())?)
             }
             false => None,
         };
 
-        log::info!("AuthenticatorData::try_from succeeded");
+        log::trace!("AuthenticatorData::try_from succeeded");
         Ok(Self {
             rp_id_hash,
             flags,

@@ -63,15 +63,15 @@ impl DB {
     }
 
     pub async fn fetch_config(&self) -> Result<Option<AppConfig>, Error> {
-        let cursor = self.app_config().find_one(None, None).await?;
-        if let Some(config) = cursor {
+        let result = self.app_config().find_one(None, None).await?;
+        if let Some(config) = result {
             return Ok(Some(config));
         }
         Ok(None)
     }
 
     pub async fn put_config(&self, config: &AppConfig) -> Result<(), Error> {
-        let _result = self.app_config().insert_one(config, None).await?;
+        self.app_config().insert_one(config, None).await?;
         Ok(())
     }
 
@@ -93,6 +93,8 @@ impl DB {
             .map_err(Error::DatabaseError)
     }
 
+    /// Fetch all user ids.
+    /// Gets a cursor and loops through with `try_next()`
     pub async fn fetch_user_ids(&self) -> Result<Vec<User>, Error> {
         let mut cursor = self.users().find(None, None).await?;
         let mut users: Vec<User> = Vec::new();
@@ -110,25 +112,16 @@ impl DB {
 
     /// Caution!  Deleting a user, wihtout deleting the user's creds is bad!
     pub async fn delete_user(&self, name: &str) -> Result<(), Error> {
-        log::info!("Deleting user: {}", name);
-        let result = self.users().delete_one(doc! {"name": name}, None).await?;
-        log::info!("{:?}", &result);
+        self.users().delete_one(doc! {"name": name}, None).await?;
         Ok(())
     }
 
     pub async fn fetch_credential_by_id(&self, id: &str) -> Result<Option<Credential>, Error> {
-        let cursor_result = self
-            .credentials()
-            .find_one(doc! {"id": id}, None)
-            .await
-            .map_err(Error::DatabaseError);
+        let cursor_result = self.credentials().find_one(doc! {"id": id}, None).await?;
 
         match cursor_result {
-            Ok(cursor) => match cursor {
-                Some(cred) => Ok(Some(cred)),
-                None => Ok(None),
-            },
-            Err(e) => Err(e),
+            Some(cred) => Ok(Some(cred)),
+            None => Ok(None),
         }
     }
 
@@ -151,12 +144,9 @@ impl DB {
 
     /// Caution!  Deleting a user, wihtout deleting the user's creds is bad!
     pub async fn delete_credential(&self, id: &Base64UrlSafeData) -> Result<(), Error> {
-        log::info!("Deleting credential: {}", &id.to_string());
-        let result = self
-            .credentials()
+        self.credentials()
             .delete_one(doc! {"id": id.to_string()}, None)
             .await?;
-        log::info!("{:?}", &result);
         Ok(())
     }
 
@@ -180,23 +170,18 @@ impl DB {
     }
 
     pub async fn delete_user_and_credentials(&self, name: &str) -> Result<(), Error> {
-        log::info!("Deleting {}", name);
-
-        let result = self.fetch_user_by_name(name).await?;
-        if result.is_none() {
-            log::trace!("Deleting {} - user not found", name);
-            return Err(Error::NotFound);
-        }
-        let user = result.unwrap();
-
-        // Delete each credential
-        if let Some(ids) = user.credentials {
-            for id in ids {
-                self.delete_credential(&id).await?;
+        match self.fetch_user_by_name(name).await? {
+            Some(user) => {
+                if let Some(ids) = user.credentials {
+                    for id in ids {
+                        self.delete_credential(&id).await?;
+                    }
+                }
+                self.delete_user(name).await?;
+                Ok(())
             }
+            None => Err(Error::NotFound),
         }
-        self.delete_user(name).await?;
-        Ok(())
     }
 
     //---------------------------------------------------------------
@@ -250,13 +235,5 @@ impl DB {
             .delete_one(doc! {"value": value.to_string()}, None)
             .await?;
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
     }
 }

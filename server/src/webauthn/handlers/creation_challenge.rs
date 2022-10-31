@@ -9,13 +9,13 @@ pub async fn creation_challenge(
     request: web::Json<UserEntity>,
     _req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    log::info!("Registration Request: {:?}", &request);
+    log::trace!("Registration Request: {:?}", &request);
     let config = service.get_config().await?;
 
     // See if this user already exists.  If so, return 403
     if service.check_user(&request.name).await? {
         // Return already registered
-        log::info!("User already exists: {}", request.name);
+        log::trace!("User already exists: {}", request.name);
         return Ok(
             HttpResponse::Forbidden().body(format!("User already registered: {}", request.name))
         );
@@ -31,7 +31,7 @@ pub async fn creation_challenge(
         PublicKeyCredentialCreationOptions::try_from((&config.webauthn, &user, &challenge.value))?;
 
     // Save the user
-    log::info!("Saving user entity: {:?}", &pk_options.user);
+    log::trace!("Saving user entity: {:?}", &pk_options.user);
 
     service.add_user(&pk_options.user).await?;
 
