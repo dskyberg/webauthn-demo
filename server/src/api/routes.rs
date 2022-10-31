@@ -4,6 +4,8 @@ use actix_web::web;
 pub fn routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("api")
+            .service(web::resource("/mds/refresh").route(web::get().to(handlers::refresh_mds)))
+            .service(web::resource("/mds/search").route(web::post().to(handlers::search_mds)))
             .service(
                 web::resource("/policy")
                     .route(web::get().to(handlers::get_policy))

@@ -3,9 +3,10 @@
 use base64urlsafedata::Base64UrlSafeData;
 use futures::stream::TryStreamExt;
 use mongodb::{
-    bson::doc, options::ClientOptions, results::InsertOneResult, Client, Collection, Database,
+    bson::doc, bson::Document, options::ClientOptions, results::InsertOneResult, Client,
+    Collection, Database,
 };
-use std::env;
+use std::{collections::HashMap, env};
 
 use super::{Challenge, User};
 use crate::{
@@ -14,10 +15,11 @@ use crate::{
     webauthn::model::{Credential, UserEntity},
 };
 
-const CRED_COLLECTION: &str = "credentials";
-const USER_COLLECTION: &str = "users";
-const APP_CONFIG_COLLECTION: &str = "appconfig";
-const WEBAUTHN_CHALLENGE_COLLECTION: &str = "webauthn_challenge";
+static CRED_COLLECTION: &str = "credentials";
+static USER_COLLECTION: &str = "users";
+static APP_CONFIG_COLLECTION: &str = "appconfig";
+static WEBAUTHN_CHALLENGE_COLLECTION: &str = "webauthn_challenge";
+static MDS_COLLECTION: &str = "mds";
 
 #[derive(Clone, Debug)]
 pub struct DB {
@@ -57,9 +59,15 @@ impl DB {
     fn app_config(&self) -> Collection<AppConfig> {
         self.database.collection::<AppConfig>(APP_CONFIG_COLLECTION)
     }
+
     fn challenges(&self) -> Collection<Challenge> {
         self.database
             .collection::<Challenge>(WEBAUTHN_CHALLENGE_COLLECTION)
+    }
+
+    fn mds(&self) -> Collection<serde_json::Value> {
+        self.database
+            .collection::<serde_json::Value>(MDS_COLLECTION)
     }
 
     pub async fn fetch_config(&self) -> Result<Option<AppConfig>, Error> {
@@ -235,5 +243,30 @@ impl DB {
             .delete_one(doc! {"value": value.to_string()}, None)
             .await?;
         Ok(())
+    }
+
+    pub async fn put_mds(&self, mds: &HashMap<String, serde_json::Value>) -> Result<(), Error> {
+        if let Some(map) = mds.get("entries") {
+            if let Some(entries) = map.as_array() {
+                self.mds().insert_many(entries, None).await?;
+            }
+        }
+        Ok(())
+    }
+
+    pub async fn get_mds(
+        &self,
+        search: &serde_json::Map<String, serde_json::Value>,
+    ) -> Result<Option<Vec<serde_json::Value>>, Error> {
+        let doc = Document::try_from(search.to_owned()).map_err(|_| Error::BadMdsSearch)?;
+        log::info!("Searching MDS with {:?}", &doc);
+
+        let mut cursor = self.mds().find(doc, None).await?;
+        let mut values: Vec<serde_json::Value> = Vec::new();
+        while let Some(value) = cursor.try_next().await? {
+            values.push(value);
+        }
+
+        Ok(Some(values))
     }
 }

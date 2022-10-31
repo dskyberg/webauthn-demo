@@ -12,6 +12,7 @@ pub mod api;
 pub mod config;
 pub mod cose;
 pub mod errors;
+pub mod mds;
 pub mod services;
 pub mod utils;
 pub mod webauthn;

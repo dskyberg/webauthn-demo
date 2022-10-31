@@ -6,6 +6,8 @@ pub use get_user_credentials::get_user_credentials;
 pub use get_users::get_users;
 pub use logout_user::logout_user;
 pub use patch_policy::patch_policy;
+pub use refresh_mds::refresh_mds;
+pub use search_mds::search_mds;
 
 pub mod check_user;
 pub mod delete_user;
@@ -15,3 +17,5 @@ pub mod get_user_credentials;
 pub mod get_users;
 pub mod logout_user;
 pub mod patch_policy;
+pub mod refresh_mds;
+pub mod search_mds;

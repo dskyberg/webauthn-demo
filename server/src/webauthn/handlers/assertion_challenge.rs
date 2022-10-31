@@ -35,7 +35,7 @@ pub async fn assertion_challenge(
         Some(c) => c,
         None => {
             log::trace!("Credential not found for user: {}", request.name);
-            return Ok(HttpResponse::Forbidden().body(format!(
+            return Ok(HttpResponse::Forbidden().json(format!(
                 r#"{{"message": "Credential not found: {}"}}"#,
                 request.name
             )));

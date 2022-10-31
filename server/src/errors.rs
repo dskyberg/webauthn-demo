@@ -87,13 +87,15 @@ pub enum Error {
     ChallengeUsed,
     #[error("WebauthnPolicyBuilder cannont have {0} as None")]
     EmptyWebauthnPolicy(String),
+    #[error("Bad search doc for MDS")]
+    BadMdsSearch,
 }
 
 use actix_web::{http::StatusCode, HttpResponse};
 
 impl actix_web::ResponseError for Error {
     fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.status_code()).json("WebAuthn Error")
+        HttpResponse::build(self.status_code()).json(format!(r#"{{"message": "{}"}}"#, self))
     }
 
     fn status_code(&self) -> StatusCode {

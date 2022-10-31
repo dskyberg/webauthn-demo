@@ -180,4 +180,19 @@ impl DataServices {
 
         Ok(())
     }
+
+    pub async fn refresh_mds(&self) -> Result<(), Error> {
+        let mds = crate::mds::fetch_fido_mds()
+            .await
+            .map_err(|_| Error::GeneralError)?;
+        self.db.put_mds(&mds).await?;
+        Ok(())
+    }
+
+    pub async fn search_mds(
+        &self,
+        search: &serde_json::Map<String, serde_json::Value>,
+    ) -> Result<Option<Vec<serde_json::Value>>, Error> {
+        self.db.get_mds(search).await
+    }
 }
